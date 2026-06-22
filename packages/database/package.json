@@ -1,0 +1,28 @@
+{
+    "name":  "@business/database",
+    "version":  "0.1.0",
+    "private":  true,
+    "type":  "module",
+    "exports":  {
+                    ".":  "./src/index.ts",
+                    "./schema":  "./src/schema.ts"
+                },
+    "scripts":  {
+                    "typecheck":  "tsc --noEmit",
+                    "db:generate":  "drizzle-kit generate",
+                    "db:migrate":  "tsx src/migrate.ts",
+                    "db:studio":  "drizzle-kit studio",
+                    "db:create":  "tsx src/provision.ts"
+                },
+    "dependencies":  {
+                         "dotenv":  "^17.2.3",
+                         "drizzle-orm":  "^0.45.2",
+                         "mysql2":  "^3.22.5",
+                         "zod":  "^4.4.3"
+                     },
+    "devDependencies":  {
+                            "drizzle-kit":  "^0.31.10",
+                            "tsx":  "^4.21.0",
+                            "typescript":  "^5.9.3"
+                        }
+}

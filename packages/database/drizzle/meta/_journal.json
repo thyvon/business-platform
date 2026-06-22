@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1782098727667,
+      "tag": "0000_gifted_captain_america",
+      "breakpoints": true
+    }
+  ]
+}
