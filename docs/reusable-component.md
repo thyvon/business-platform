@@ -105,11 +105,10 @@ Candidates:
 
 Requirements:
 
-* Multiple variants
-* Multiple sizes
-* Loading state
-* Disabled state
-* Fully typed props
+* Variants and sizes only when they serve a real use case
+* Loading and disabled states where the control supports them
+* Native HTML props and accessibility attributes
+* Fully typed public props
 
 ---
 
@@ -209,9 +208,9 @@ Candidates:
 
 Requirements:
 
-* React Hook Form compatible
-* Validation support
-* Error display
+* Native props and ref compatibility
+* Accessible validation and error display
+* Form-library adapters only after that library is approved and installed
 
 ---
 
@@ -249,7 +248,9 @@ Candidates:
 
 Requirements:
 
-* Modern SaaS dashboard design
+* Stored inside the feature that owns the business data
+* Composed from shared primitives rather than duplicated styling
+* Clear loading, empty, error, and populated states
 
 ---
 
@@ -267,92 +268,222 @@ Candidates:
 
 ---
 
-# Coding Standards
+## Class Name Utility
 
-## TypeScript
+A shared `cn(...classes)` utility is planned but does not exist yet.
 
-* Strict typing
-* No any
-* Reusable interfaces
-* Generic support where appropriate
+Before variant-based components use `cn`, create and test:
+
+```txt
+apps/web/src/lib/cn.ts
+```
+
+It should join conditional classes, resolve conflicting Tailwind classes, and preserve caller-provided `className` values. Choose and install supporting packages deliberately; do not copy imports without adding their dependencies.
+
+## Dynamic UI and Styling
+
+Use Tailwind CSS first. Shared CSS variables are allowed and required for Dynamic UI.
+
+### Accent colors
+
+The Dynamic UI provider remaps Tailwind's `indigo-*` variables to the selected accent palette.
+
+- Use `indigo-*` for primary actions, active navigation, focus indicators, and brand accents.
+- Use `emerald-*` for success, `amber-*` for warnings, and `red-*` for errors or destructive actions.
+- Do not hardcode brand hex colors in reusable components.
+- Do not use a semantic success color as a general accent.
+
+### Corner radius
+
+Use Tailwind classes such as `rounded-lg`, `rounded-xl`, and `rounded-2xl`. Dynamic UI changes their shared radius variables.
+
+Avoid fixed inline radius values except for documented shapes such as a circular avatar.
+
+### Themes and surfaces
+
+Check every visual component in light and dark mode.
+
+- Page: slate 50 / slate 950
+- Card or overlay: white / slate 900
+- Border: slate 200 / slate 700
+- Muted text: slate 500 / slate 400
+
+A shared component must contain its required dark-mode styles. Callers should not need to repair it.
+
+### Responsive behavior
+
+Design for the smallest screen first. Components must not assume desktop width. Tables, forms, navigation, and overlays require an explicit narrow-screen behavior.
 
 ## Accessibility
 
-* Proper ARIA labels
-* Keyboard navigation
-* Screen reader support
+Target WCAG 2.2 Level AA.
 
-## Styling
+All components require:
 
-* Tailwind CSS only
-* Use utility function:
+- Semantic HTML before ARIA
+- Visible keyboard focus
+- Keyboard access to every action
+- Accessible names for icon-only controls
+- Correct disabled behavior
+- Sufficient contrast
+- Zoom and narrow-screen support
+- Reduced motion for nonessential animation
 
-```ts
-cn(...classes)
-```
+Form controls must connect labels, descriptions, and errors using stable IDs and appropriate ARIA attributes. Color must not be the only status indicator.
 
-* Consistent spacing
-* Consistent colors
-* Dark mode support
+### Dialog and Drawer
+
+Overlays require:
+
+- Dialog semantics and an accessible title
+- Escape closing when dismissal is allowed
+- Safe outside-click behavior
+- Initial focus placement and focus trapping
+- Focus restored to the trigger after closing
+- Background interaction disabled
+- Page scrolling locked
+- Correct stacking and mobile sizing
+
+Popover, Tooltip, Dropdown Menu, and Dialog are different interaction patterns. Do not implement all of them as renamed modals.
+
+### Progress and loading
+
+A determinate Progress component must expose its value to assistive technology. A decorative route progress bar should be hidden from screen readers when it does not communicate meaningful progress.
+
+## Forms
+
+Build native, accessible foundations first:
+
+1. Label
+2. Input and Textarea
+3. Select and Checkbox
+4. Field wrapper with description and error
+5. Form-level error summary
+
+Add Combobox, Multi Select, Date Picker, File Upload, and OTP Input only for a real workflow with acceptance criteria.
+
+If React Hook Form is adopted, keep basic inputs compatible with native props and refs instead of tightly coupling them to the library.
+
+File Upload needs security rules beyond its visual component: file type, size, storage, authorization, and malware handling.
+
+## Data Display
+
+Keep `Table` separate from `DataTable`:
+
+- `Table` supplies accessible markup and styling.
+- `DataTable` adds sorting, filtering, selection, and pagination.
+
+Responsive data must preserve important values, expose keyboard-accessible sorting, and support loading, empty, error, and populated states. Prefer server-side sorting and pagination for large datasets.
+
+Charts need a text summary or accessible data alternative. Color alone must not communicate values.
+
+## Avoid Duplicate Components
+
+- Use `Toast` rather than duplicating it as `Snackbar`.
+- Use `Dialog` as the primitive; `ConfirmationDialog` may compose it.
+- Use `Table` for structure and `DataTable` for behavior.
+- Use `Spinner` for an indeterminate wait and `Progress` for measurable progress.
+- Keep `Card` generic; KPI and analytics cards belong to their feature.
+
+Search the repository before creating a component.
 
 ## Performance
 
-* Memoize expensive components
-* Avoid unnecessary re-renders
-* Lazy load heavy components
+Measure before optimizing. Avoid unnecessary client boundaries and re-renders, and lazy-load genuinely heavy components. Do not add memoization automatically; it adds complexity and should solve an observed problem.
 
----
+## Testing Strategy
 
-# Deliverables
+The web workspace does not yet have a complete component-test setup. Until it does, lint, type-check, production build, and careful keyboard testing are the minimum checks.
 
-For each component generate:
+When testing tools are added, use:
 
-1. Component source code
-2. Type definitions
-3. Example usage
-4. Props documentation
-5. Accessibility notes
-6. Responsive behavior notes
+- Unit tests for variants and pure utilities
+- Component tests for interaction, keyboard use, and accessibility
+- Playwright for critical user journeys
+- Visual checks at mobile and desktop widths
+- Checks for light mode, dark mode, and every Dynamic UI option
 
----
+High-risk components such as Dialog, Drawer, Combobox, File Upload, and DataTable need stronger tests than a static Card.
 
-# Design System
+## Component Documentation
 
-Create design tokens:
+Document each shared component with:
 
-## Colors
+1. Purpose and import path
+2. Basic compiling example
+3. Props, sizes, and variants
+4. Controlled or uncontrolled behavior
+5. Accessibility behavior
+6. Responsive behavior
+7. Dynamic UI and dark-mode behavior
+8. Relevant loading, empty, error, and disabled states
 
-* Primary
-* Secondary
-* Success
-* Warning
-* Danger
-* Info
+Do not document an API that has not been implemented.
 
-## Sizes
+## Implementation Roadmap
 
-* xs
-* sm
-* md
-* lg
-* xl
+### Phase 1: foundations
 
-## Radius
+- `cn` utility
+- Button and IconButton
+- Label, Input, Textarea, Select, and Checkbox
+- Card, Badge, Alert, Spinner, and Skeleton
 
-* sm
-* md
-* lg
-* xl
+### Phase 2: application patterns
 
-## Shadows
+- PageHeader and Breadcrumbs
+- EmptyState and ErrorState
+- FormField and validation display
+- Pagination
 
-* sm
-* md
-* lg
-* xl
+### Phase 3: accessible overlays
 
----
+- Dialog and ConfirmationDialog
+- Complete the existing Drawer's focus management
+- Add Dropdown Menu, Popover, and Tooltip as workflows require them
 
-# Final Goal
+### Phase 4: business data
 
-Produce a reusable component library similar to modern SaaS products and design systems, suitable for enterprise applications, dashboards, admin panels, and business platforms.
+- Table
+- DataTable for the first real listing workflow
+- Search and filtering controls
+
+### Phase 5: advanced controls
+
+- Combobox and Multi Select
+- Date Picker and Date Range Picker
+- File Upload
+- Toast system
+
+Implement, review, and reuse each foundation before building the next layer.
+
+## Current Inventory
+
+Current shared UI:
+
+```txt
+apps/web/src/components/ui/
+├── drawer.tsx
+└── progress-bar.tsx
+```
+
+Shared layout components are in `apps/web/src/components/layout/`. Dashboard-specific UI is in `apps/web/src/features/dashboard/components/`.
+
+Update this inventory whenever shared components are added or removed.
+
+## Definition of Done
+
+A reusable component is complete when:
+
+- Its responsibility and folder are clear
+- TypeScript and ESLint pass
+- Keyboard interaction and semantics are correct
+- Mobile and desktop behavior are verified
+- Light and dark mode work
+- Every Dynamic UI accent and radius option works
+- Relevant loading, error, empty, and disabled states are handled
+- Documentation includes a compiling example
+- Tests match the component's risk
+- The production build passes
+
+Production readiness comes from a small, dependable system—not from the number of components in the library.

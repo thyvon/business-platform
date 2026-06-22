@@ -10,3 +10,4 @@ export function createDatabase(connectionUri: string) {
 }
 
 export * from "./schema.js";
+export { hashPassword, passwordHashOptions, verifyPassword } from "./auth-password.js";

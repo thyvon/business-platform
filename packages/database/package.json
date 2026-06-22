@@ -1,28 +1,34 @@
 {
-    "name":  "@business/database",
-    "version":  "0.1.0",
-    "private":  true,
-    "type":  "module",
-    "exports":  {
-                    ".":  "./src/index.ts",
-                    "./schema":  "./src/schema.ts"
-                },
-    "scripts":  {
-                    "typecheck":  "tsc --noEmit",
-                    "db:generate":  "drizzle-kit generate",
-                    "db:migrate":  "tsx src/migrate.ts",
-                    "db:studio":  "drizzle-kit studio",
-                    "db:create":  "tsx src/provision.ts"
-                },
-    "dependencies":  {
-                         "dotenv":  "^17.2.3",
-                         "drizzle-orm":  "^0.45.2",
-                         "mysql2":  "^3.22.5",
-                         "zod":  "^4.4.3"
-                     },
-    "devDependencies":  {
-                            "drizzle-kit":  "^0.31.10",
-                            "tsx":  "^4.21.0",
-                            "typescript":  "^5.9.3"
-                        }
+    "name": "@business/database",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./schema": "./src/schema.ts"
+    },
+    "scripts": {
+        "test": "vitest run --config vitest.config.ts",
+        "typecheck": "tsc --noEmit",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "tsx src/migrate.ts",
+        "db:seed-auth": "tsx src/seed-auth.ts",
+        "db:provision-owner": "tsx src/provision-owner.ts",
+        "db:studio": "drizzle-kit studio",
+        "db:create": "tsx src/provision.ts"
+    },
+    "dependencies": {
+        "@business/contracts": "^0.1.0",
+        "argon2": "^0.44.0",
+        "dotenv": "^17.2.3",
+        "drizzle-orm": "^0.45.2",
+        "mysql2": "^3.22.5",
+        "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "drizzle-kit": "^0.31.10",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.1.9"
+    }
 }

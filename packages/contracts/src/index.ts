@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./auth.js";
+
 export const productStatusSchema = z.enum(["Active", "Inactive", "Discontinued"]);
 
 export const productSchema = z.object({

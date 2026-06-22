@@ -33,8 +33,7 @@ A lower layer must not import a higher layer. Database code never imports Expres
 
 ## Recommended next capabilities
 
-- Authentication: Auth.js or an external OpenID Connect provider
-- Authorization: organization-scoped roles and explicit permissions
+- Authentication and authorization: follow the implementation-ready scope in [Authentication and Authorization Scope](./auth-scope.md)
 - Auditing: append-only audit events for approvals and financial changes
 - Background work: a job queue for imports, notifications, and document processing
 - Object storage: Cloudinary or S3-compatible storage behind an integration interface

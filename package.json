@@ -18,8 +18,10 @@
                     "typecheck":  "npm run typecheck -ws --if-present",
                     "check":  "npm run lint \u0026\u0026 npm run typecheck \u0026\u0026 npm run test \u0026\u0026 npm run build",
                     "db:generate":  "npm run db:generate -w @business/database",
-                    "db:migrate":  "npm run db:migrate -w @business/database",
-                    "db:studio":  "npm run db:studio -w @business/database",
+        "db:migrate":  "npm run db:migrate -w @business/database",
+        "db:seed-auth":  "npm run db:seed-auth -w @business/database",
+        "db:provision-owner":  "npm run db:provision-owner -w @business/database",
+        "db:studio":  "npm run db:studio -w @business/database",
                     "db:create":  "npm run db:create -w @business/database",
                     "db:setup":  "npm run db:create \u0026\u0026 npm run db:generate \u0026\u0026 npm run db:migrate",
                     "test":  "npm run test -ws --if-present"
