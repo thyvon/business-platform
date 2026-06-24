@@ -20,10 +20,10 @@ Only mark work complete after its relevant validation passes.
 
 ### Security decisions
 
-- [ ] Recheck current OWASP implementation guidance
+- [x] Recheck current OWASP implementation guidance
 - [x] Select and document password-hashing dependency
-- [ ] Select and document cookie/session parsing dependency
-- [ ] Select and document rate-limit and CSRF approach
+- [x] Select and document cookie/session parsing dependency
+- [x] Select and document rate-limit and CSRF approach
 
 ### Database
 
@@ -49,46 +49,46 @@ Only mark work complete after its relevant validation passes.
 
 ### Authorization foundation
 
-- [ ] Add typed authenticated principal
-- [ ] Add authentication middleware
-- [ ] Add permission middleware
-- [ ] Add CSRF protection for mutations
+- [x] Add typed authenticated principal
+- [x] Add authentication middleware
+- [x] Add permission middleware
+- [x] Add CSRF protection for authentication mutations
 - [ ] Protect existing Product API routes
-- [ ] Add authorization service tests
+- [x] Add authorization service tests
 
 ### Bootstrap
 
 - [x] Seed stable permission keys
 - [x] Seed built-in role definitions
 - [x] Create one-time Owner provisioning command
-- [ ] Provision the first development Owner with approved real details
+- [x] Provision the first development Owner with approved real details
 - [ ] Test last-Owner protection rules
 
 ## Phase 2: Login and Sessions
 
 ### API
 
-- [ ] Implement login
-- [ ] Implement logout
-- [ ] Implement current-session endpoint
+- [x] Implement login
+- [x] Implement logout
+- [x] Implement current-session endpoint
 - [ ] Implement password change
 - [ ] Implement session expiry and cleanup
-- [ ] Add login rate limiting and generic errors
-- [ ] Add authentication audit events
+- [x] Add login rate limiting and generic errors
+- [x] Add authentication audit events
 
 ### Web
 
-- [ ] Create public authentication layout
-- [ ] Create accessible login page
-- [ ] Add protected application layout
+- [x] Create public authentication layout
+- [x] Create accessible login page
+- [x] Add protected application layout
 - [ ] Add safe return-path handling
-- [ ] Add account menu and logout
+- [x] Add account menu and logout
 - [ ] Add Access Denied and expired-session states
 
 ### Tests
 
-- [ ] Add login service tests
-- [ ] Add session integration tests
+- [x] Add login service tests
+- [x] Add session integration tests
 - [ ] Add login/logout browser journey
 - [ ] Test keyboard, mobile, dark mode, and Dynamic UI
 
@@ -140,8 +140,8 @@ Only mark work complete after its relevant validation passes.
 
 ## Current Step
 
-Provision the first development Owner with approved real organization and user details.
+Run the first manual browser login and logout journey with the provisioned development Owner.
 
 ## Next Step
 
-After provisioning the real Owner, implement the typed principal and authentication middleware.
+Add safe return-path handling and clear expired-session and access-denied states before protecting business API routes.

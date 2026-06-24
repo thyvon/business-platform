@@ -18,13 +18,16 @@ The API is the final security boundary. The web application may hide unavailable
 
 The project currently has:
 
-- No users, organizations, roles, permissions, or sessions in the database
-- No authentication middleware in the Express API
-- No login or protected-route flow in Next.js
-- No authentication packages installed
-
-This work must therefore be implemented as a new module. Do not add temporary hardcoded users or trust a role sent by the browser.
-
+- Versioned authentication and authorization database tables
+- Seeded stable permissions and built-in role definitions
+- One-time Owner provisioning
+- Typed API principals with session authentication and permission middleware
+- Login, logout, and current-session API endpoints
+- Exact Origin or Referer validation on authentication mutations
+- Bounded in-memory login throttling for one API instance
+- Public web login and server-validated protected application layout
+- Current-user display and logout are available in the protected navigation
+- Product routes intentionally remain unprotected until route-level authorization is approved
 ## Decisions
 
 ### Account model
@@ -52,6 +55,8 @@ External OpenID Connect and multi-factor authentication are future extensions. T
 
 ### Session cookie
 
+The API uses the focused cookie package to parse the request cookie header. Application code owns session lookup and validation; it does not accept session tokens from URLs, request bodies, or custom headers.
+
 Use one cookie dedicated to authentication:
 
 - Suggested name: `bp_session`
@@ -61,6 +66,7 @@ Use one cookie dedicated to authentication:
 - `Path=/`
 - No user, role, or permission data inside the cookie
 - Expiration matching the server-side session
+- Twelve-hour default lifetime, configurable through SESSION_TTL_HOURS
 
 Rotate the session token after login and important security changes. Revoke sessions on logout, password reset, suspension, or forced sign-out.
 
@@ -71,6 +77,9 @@ Rotate the session token after login and important security changes. Revoke sess
 - State-changing requests require CSRF protection in addition to SameSite cookies.
 - Validate `Origin` or `Referer` for browser mutations.
 - Never place session or reset tokens in logs.
+- Authentication mutations require an exact configured Origin or Referer match.
+- Login failures are limited per network and per network-account pair in a bounded 15-minute window.
+- The in-memory limiter must use a shared store before the API is horizontally scaled.
 
 ## Database Scope
 
@@ -586,4 +595,4 @@ These require separate threat modeling and acceptance criteria.
 
 ## Security References
 
-Use the current OWASP Authentication, Session Management, Password Storage, and CSRF Prevention Cheat Sheets during implementation. External documentation access was unavailable while this scope was written, so dependency-specific settings must be rechecked before code is approved for production.
+Use the current OWASP Authentication, Session Management, Password Storage, and CSRF Prevention Cheat Sheets during implementation. OWASP session, authorization, and CSRF guidance was rechecked before implementing the authentication boundary. Dependency-specific settings must still be reviewed during production hardening.

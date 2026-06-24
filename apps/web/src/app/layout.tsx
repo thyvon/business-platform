@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { AppShell } from "@/components/layout/app-shell";
 import { ThemeProvider, type Theme } from "@/lib/theme-context";
 import { ColorSchemeProvider } from "@/lib/color-scheme-context";
 import { CornerRadiusProvider } from "@/lib/corner-radius-context";
@@ -20,7 +19,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const storedScheme = cookieStore.get("color-scheme")?.value;
   const colorScheme = isColorScheme(storedScheme) ? storedScheme : "indigo";
   const cornerRadius = parseCornerRadius(cookieStore.get("corner-radius")?.value) ?? 10;
-  const sidebarCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
   const dynamicUiStyle = {
     ...getColorSchemeStyle(colorScheme),
     ...getCornerRadiusStyle(cornerRadius),
@@ -39,7 +37,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ThemeProvider initialTheme={theme}>
           <ColorSchemeProvider initialScheme={colorScheme}>
             <CornerRadiusProvider initialValue={cornerRadius}>
-              <AppShell initialSidebarCollapsed={sidebarCollapsed}>{children}</AppShell>
+              {children}
             </CornerRadiusProvider>
           </ColorSchemeProvider>
         </ThemeProvider>

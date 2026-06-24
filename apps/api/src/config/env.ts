@@ -11,6 +11,7 @@ const environmentSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(4000),
   WEB_ORIGIN: z.url().default("http://localhost:3000"),
   DATABASE_URL: z.string().min(1),
+  SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(12),
 });
 
 const parsed = environmentSchema.safeParse(process.env);
@@ -24,5 +25,6 @@ export const env = Object.freeze({
   port: parsed.data.API_PORT,
   webOrigin: parsed.data.WEB_ORIGIN,
   databaseUrl: parsed.data.DATABASE_URL,
+  sessionTtlMs: parsed.data.SESSION_TTL_HOURS * 60 * 60 * 1_000,
   isProduction: parsed.data.NODE_ENV === "production",
 });

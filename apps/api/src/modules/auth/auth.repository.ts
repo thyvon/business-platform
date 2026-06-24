@@ -1,0 +1,199 @@
+import { randomUUID } from "node:crypto";
+import type { PermissionKey } from "@business/contracts";
+import { permissionKeySchema } from "@business/contracts";
+import type { Database } from "@business/database";
+import {
+  auditEvents,
+  membershipRoles,
+  organizationMemberships,
+  organizations,
+  permissions,
+  rolePermissions,
+  roles,
+  sessions,
+  users,
+} from "@business/database";
+import { and, asc, eq, gt, isNull, lte, or } from "drizzle-orm";
+import type {
+  AuthenticatedPrincipal,
+  AuthenticatedRole,
+  LoginAccount,
+  LoginSessionStore,
+  NewSession,
+} from "./auth.types.js";
+
+export class AuthRepository implements LoginSessionStore {
+  constructor(private readonly database: Database["db"]) {}
+
+  async findLoginAccountByEmail(email: string): Promise<LoginAccount | null> {
+    const rows = await this.database
+      .select({
+        userId: users.id,
+        email: users.email,
+        displayName: users.displayName,
+        passwordHash: users.passwordHash,
+        organizationId: organizations.id,
+        organizationName: organizations.name,
+        membershipId: organizationMemberships.id,
+      })
+      .from(users)
+      .innerJoin(
+        organizationMemberships,
+        and(
+          eq(organizationMemberships.userId, users.id),
+          eq(organizationMemberships.status, "active"),
+        ),
+      )
+      .innerJoin(
+        organizations,
+        and(
+          eq(organizations.id, organizationMemberships.organizationId),
+          eq(organizations.status, "active"),
+        ),
+      )
+      .where(and(eq(users.email, email), eq(users.status, "active")))
+      .orderBy(asc(organizationMemberships.createdAt))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  async createSession(session: NewSession): Promise<void> {
+    await this.database.transaction(async (transaction) => {
+      await transaction.insert(sessions).values({
+        id: session.id,
+        userId: session.userId,
+        organizationId: session.organizationId,
+        tokenHash: session.tokenHash,
+        expiresAt: session.expiresAt,
+        lastSeenAt: session.createdAt,
+        ipAddress: session.ipAddress,
+        userAgent: session.userAgent,
+        createdAt: session.createdAt,
+      });
+
+      await transaction
+        .update(users)
+        .set({ lastLoginAt: session.createdAt })
+        .where(eq(users.id, session.userId));
+
+      await transaction.insert(auditEvents).values({
+        id: randomUUID(),
+        organizationId: session.organizationId,
+        actorUserId: session.userId,
+        action: "auth.login.succeeded",
+        targetType: "session",
+        targetId: session.id,
+        requestId: session.requestId,
+        metadata: { source: "password" },
+        createdAt: session.createdAt,
+      });
+    });
+  }
+
+  async revokeSession(
+    principal: AuthenticatedPrincipal,
+    requestId: string,
+    revokedAt: Date,
+  ): Promise<void> {
+    await this.database.transaction(async (transaction) => {
+      await transaction
+        .update(sessions)
+        .set({ revokedAt })
+        .where(and(eq(sessions.id, principal.sessionId), isNull(sessions.revokedAt)));
+
+      await transaction.insert(auditEvents).values({
+        id: randomUUID(),
+        organizationId: principal.organization.id,
+        actorUserId: principal.user.id,
+        action: "auth.logout",
+        targetType: "session",
+        targetId: principal.sessionId,
+        requestId,
+        createdAt: revokedAt,
+      });
+    });
+  }
+
+  async findByTokenHash(tokenHash: string, now: Date): Promise<AuthenticatedPrincipal | null> {
+    const rows = await this.database
+      .select({
+        sessionId: sessions.id,
+        expiresAt: sessions.expiresAt,
+        userId: users.id,
+        userEmail: users.email,
+        userDisplayName: users.displayName,
+        organizationId: organizations.id,
+        organizationName: organizations.name,
+        membershipId: organizationMemberships.id,
+        roleId: roles.id,
+        roleName: roles.name,
+        roleDescription: roles.description,
+        roleIsSystem: roles.isSystem,
+        permissionKey: permissions.key,
+      })
+      .from(sessions)
+      .innerJoin(users, eq(users.id, sessions.userId))
+      .innerJoin(organizations, eq(organizations.id, sessions.organizationId))
+      .innerJoin(
+        organizationMemberships,
+        and(
+          eq(organizationMemberships.userId, sessions.userId),
+          eq(organizationMemberships.organizationId, sessions.organizationId),
+        ),
+      )
+      .leftJoin(membershipRoles, eq(membershipRoles.membershipId, organizationMemberships.id))
+      .leftJoin(
+        roles,
+        and(eq(roles.id, membershipRoles.roleId), eq(roles.organizationId, sessions.organizationId)),
+      )
+      .leftJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
+      .leftJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+      .where(and(
+        eq(sessions.tokenHash, tokenHash),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, now),
+        eq(users.status, "active"),
+        eq(organizations.status, "active"),
+        eq(organizationMemberships.status, "active"),
+        or(isNull(users.passwordChangedAt), lte(users.passwordChangedAt, sessions.createdAt)),
+      ));
+
+    const first = rows[0];
+    if (!first) return null;
+
+    const roleMap = new Map<string, AuthenticatedRole>();
+    const effectivePermissions = new Set<PermissionKey>();
+
+    for (const row of rows) {
+      if (row.roleId && row.roleName !== null && row.roleDescription !== null && row.roleIsSystem !== null) {
+        roleMap.set(row.roleId, {
+          id: row.roleId,
+          name: row.roleName,
+          description: row.roleDescription,
+          isSystem: row.roleIsSystem,
+        });
+      }
+
+      const parsedPermission = permissionKeySchema.safeParse(row.permissionKey);
+      if (parsedPermission.success) effectivePermissions.add(parsedPermission.data);
+    }
+
+    return {
+      sessionId: first.sessionId,
+      user: {
+        id: first.userId,
+        email: first.userEmail,
+        displayName: first.userDisplayName,
+      },
+      organization: {
+        id: first.organizationId,
+        name: first.organizationName,
+      },
+      membershipId: first.membershipId,
+      roles: [...roleMap.values()],
+      permissions: effectivePermissions,
+      expiresAt: first.expiresAt,
+    };
+  }
+}
