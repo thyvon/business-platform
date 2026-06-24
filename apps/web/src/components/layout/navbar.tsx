@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import type { CurrentSession } from "@business/contracts";
-import { LoaderCircle, LogOut, PanelLeft, Settings } from "lucide-react";
+import { LoaderCircle, LogOut, Moon, PanelLeft, Settings, Sun } from "lucide-react";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { apiRequest, ApiClientError } from "@/lib/api-client";
+import { useTheme } from "@/lib/theme-context";
 
 export function Navbar({
   currentSession,
@@ -16,6 +19,7 @@ export function Navbar({
   onOpenDrawer: () => void;
 }) {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
 
@@ -42,15 +46,15 @@ export function Navbar({
   }
 
   return (
-    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2 dark:border-slate-700 dark:bg-slate-900">
-      <button
-        type="button"
+    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-background px-4 py-2">
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onToggleSidebar}
-        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
         aria-label="Toggle sidebar"
       >
         <PanelLeft className="size-5" />
-      </button>
+      </Button>
 
       <div className="ml-auto flex min-w-0 items-center gap-2">
         {logoutError && (
@@ -58,32 +62,42 @@ export function Navbar({
             {logoutError}
           </span>
         )}
-        <div className="hidden min-w-0 text-right sm:block">
-          <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+        <button type="button" onClick={() => router.push("/profile" as Route)} className="hidden min-w-0 text-right sm:block cursor-pointer">
+          <p className="truncate text-sm font-semibold text-foreground hover:text-primary transition-colors">
             {currentSession.user.displayName}
           </p>
-          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+          <p className="truncate text-xs text-muted-foreground">
             {currentSession.organization.name}
           </p>
-        </div>
-        <button
-          type="button"
+        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+          title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+        >
+          {theme === "light" ? <Moon className="size-5" /> : <Sun className="size-5" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onOpenDrawer}
-          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
           aria-label="Open layout settings"
         >
           <Settings className="size-5" />
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handleLogout}
           disabled={loggingOut}
-          className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
           aria-label="Sign out"
           title="Sign out"
+          className="hover:text-red-700 hover:bg-red-50 dark:hover:text-red-300 dark:hover:bg-red-950/40"
         >
           {loggingOut ? <LoaderCircle className="size-5 animate-spin" /> : <LogOut className="size-5" />}
-        </button>
+        </Button>
       </div>
     </header>
   );

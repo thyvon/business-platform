@@ -4,6 +4,10 @@ import { useState, type FormEvent } from "react";
 import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { CurrentSession } from "@business/contracts";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { apiRequest, ApiClientError } from "@/lib/api-client";
 
 export function LoginForm() {
@@ -41,24 +45,21 @@ export function LoginForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none sm:p-8"
-    >
+    <Card className="shadow-xl ring-0">
+      <form onSubmit={handleSubmit}>
+      <CardContent className="p-8 sm:p-10">
       {errorMessage && (
         <div
           role="alert"
-          className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300"
+          className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
         >
           {errorMessage}
         </div>
       )}
 
       <div>
-        <label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Email address
-        </label>
-        <input
+        <Label htmlFor="email">Email address</Label>
+        <Input
           id="email"
           name="email"
           type="email"
@@ -66,30 +67,28 @@ export function LoginForm() {
           required
           autoFocus
           disabled={submitting}
-          className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-indigo-400 dark:focus:ring-indigo-950"
+          className="mt-2.5 h-12"
           placeholder="you@company.com"
         />
       </div>
 
-      <div className="mt-5">
-        <label htmlFor="password" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Password
-        </label>
-        <div className="relative mt-2">
-          <input
+      <div className="mt-7">
+        <Label htmlFor="password">Password</Label>
+        <div className="relative mt-2.5">
+          <Input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             required
             disabled={submitting}
-            className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pr-11 pl-3.5 text-sm text-slate-950 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-indigo-400 dark:focus:ring-indigo-950"
+            className="h-12 pr-12"
           />
           <button
             type="button"
             onClick={() => setShowPassword((visible) => !visible)}
             disabled={submitting}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-400 hover:text-slate-700 disabled:cursor-not-allowed dark:hover:text-slate-200"
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground hover:text-foreground disabled:cursor-not-allowed"
             aria-label={showPassword ? "Hide password" : "Show password"}
             aria-pressed={showPassword}
           >
@@ -98,10 +97,10 @@ export function LoginForm() {
         </div>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={submitting}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-indigo-950"
+        className="mt-8 w-full py-6 text-base"
       >
         {submitting ? (
           <>
@@ -114,7 +113,9 @@ export function LoginForm() {
             Sign in
           </>
         )}
-      </button>
-    </form>
+      </Button>
+      </CardContent>
+      </form>
+    </Card>
   );
 }

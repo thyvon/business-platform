@@ -115,6 +115,13 @@ export class AuthRepository implements LoginSessionStore {
     });
   }
 
+  async updateUserProfile(userId: string, displayName: string): Promise<void> {
+    await this.database
+      .update(users)
+      .set({ displayName, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
   async findByTokenHash(tokenHash: string, now: Date): Promise<AuthenticatedPrincipal | null> {
     const rows = await this.database
       .select({

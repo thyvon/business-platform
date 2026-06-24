@@ -14,9 +14,9 @@ Every shared component must be typed, responsive where appropriate, accessible, 
 
 ## Current Stack
 
-The web application currently uses Next.js App Router, React, strict TypeScript, Tailwind CSS, and Lucide icons.
+The web application uses Next.js App Router, React 19, strict TypeScript, Tailwind CSS v4, Lucide icons, and **shadcn/ui** (Base UI variant).
 
-Always check `apps/web/package.json` before importing a package. React Hook Form, a headless component library, Storybook, and browser component tests are not currently configured. Add dependencies only when an approved component needs them.
+shadcn/ui provides the UI primitives: `Button`, `Input`, `Label`, `Card`, `Sheet`, `Progress`. These use `@base-ui/react` for headless behavior. Always check `apps/web/package.json` before importing additional packages. React Hook Form, Storybook, and browser component tests are not currently configured.
 
 ## Project Structure
 
@@ -270,15 +270,7 @@ Candidates:
 
 ## Class Name Utility
 
-A shared `cn(...classes)` utility is planned but does not exist yet.
-
-Before variant-based components use `cn`, create and test:
-
-```txt
-apps/web/src/lib/cn.ts
-```
-
-It should join conditional classes, resolve conflicting Tailwind classes, and preserve caller-provided `className` values. Choose and install supporting packages deliberately; do not copy imports without adding their dependencies.
+Available at `@/lib/utils` — `cn(...inputs: ClassValue[])` joins conditional classes and resolves conflicting Tailwind classes using `clsx` and `tailwind-merge`. Used by all shadcn components. Import it when building variant-based components.
 
 ## Dynamic UI and Styling
 
@@ -459,17 +451,29 @@ Implement, review, and reuse each foundation before building the next layer.
 
 ## Current Inventory
 
-Current shared UI:
+UI primitives (shadcn/ui — `@base-ui/react`):
 
 ```txt
 apps/web/src/components/ui/
-├── drawer.tsx
-└── progress-bar.tsx
+├── button.tsx           # Variants: default, outline, secondary, ghost, destructive, link
+├── card.tsx             # Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
+├── input.tsx            # Base UI input with focus and disabled states
+├── label.tsx            # Accessible label with peer-disabled styling
+├── progress.tsx         # Progress, ProgressTrack, ProgressIndicator, ProgressLabel, ProgressValue
+├── progress-bar.tsx     # Route-level navigation progress bar (decorative only)
+└── sheet.tsx            # Overlay drawer with focus trap, ESC close, and backdrop
 ```
 
-Shared layout components are in `apps/web/src/components/layout/`. Dashboard-specific UI is in `apps/web/src/features/dashboard/components/`.
+Layout components are in `apps/web/src/components/layout/`. Feature-specific UI is in `apps/web/src/features/<feature>/components/`.
 
-Update this inventory whenever shared components are added or removed.
+When adding new shadcn components:
+
+```bash
+cd apps/web
+npx shadcn@latest add <component-name>
+```
+
+Update this inventory whenever components are added or removed.
 
 ## Definition of Done
 

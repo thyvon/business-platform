@@ -36,6 +36,7 @@ export function createApp(database: Database["db"]) {
     csrfProtection: createCsrfProtection(env.webOrigin),
     loginRateLimiter: new LoginRateLimiter(),
     secureCookies: env.isProduction,
+    authRepository,
   }));
 
   const productService = new ProductService(new ProductRepository(database));

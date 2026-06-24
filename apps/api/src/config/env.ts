@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { z } from "zod";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(directory, "../../../.env") });
+dotenv.config({ path: path.resolve(directory, "../../../../.env") });
 
 const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),

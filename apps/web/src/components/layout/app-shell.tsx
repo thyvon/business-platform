@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import type { CurrentSession } from "@business/contracts";
 import { Sidebar } from "./sidebar";
 import { Navbar } from "./navbar";
@@ -19,6 +20,7 @@ export function AppShell({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(initialSidebarCollapsed);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", String(sidebarCollapsed));
@@ -38,7 +40,7 @@ export function AppShell({
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
@@ -51,7 +53,7 @@ export function AppShell({
           onOpenDrawer={() => setDrawerOpen(true)}
         />
         <main className="flex-1">
-          <div className="w-full px-4 py-4 sm:px-5 sm:py-6">
+          <div key={pathname} className="w-full px-4 py-4 sm:px-5 sm:py-6 animate-[fadeIn_300ms_ease-out]">
             {children}
           </div>
         </main>

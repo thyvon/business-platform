@@ -17,7 +17,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const cookieStore = await cookies();
   const theme = (cookieStore.get("theme")?.value === "dark" ? "dark" : "light") as Theme;
   const storedScheme = cookieStore.get("color-scheme")?.value;
-  const colorScheme = isColorScheme(storedScheme) ? storedScheme : "indigo";
+  const colorScheme = isColorScheme(storedScheme) ? storedScheme : "emerald";
   const cornerRadius = parseCornerRadius(cookieStore.get("corner-radius")?.value) ?? 10;
   const dynamicUiStyle = {
     ...getColorSchemeStyle(colorScheme),
@@ -27,9 +27,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" className={theme === "dark" ? "dark" : ""} style={dynamicUiStyle}>
       <head>
-        <link rel="preload" href="/fonts/inter/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/inter/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/inter/inter-latin-700-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/kantumruy-pro/kantumruy-pro-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body>

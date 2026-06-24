@@ -1,15 +1,16 @@
-import { loginSchema, type CurrentSession } from "@business/contracts";
+import { loginSchema, updateUserSchema, type CurrentSession } from "@business/contracts";
 import { Router } from "express";
 import type { RequestHandler } from "express";
 import { AppError } from "../../shared/errors/app-error.js";
 import { clearSessionCookie, createSessionCookie } from "./auth.cookie.js";
-import { createAuthenticate } from "./auth.middleware.js";
+import { createAuthenticate, readSessionToken } from "./auth.middleware.js";
 import type {
   LoginMetadata,
   LoginResult,
   SessionAuthenticator,
 } from "./auth.service.js";
 import type { AuthenticatedPrincipal } from "./auth.types.js";
+import type { AuthRepository } from "./auth.repository.js";
 import type { LoginRateLimiter } from "./login-rate-limiter.js";
 
 interface LoginSessions {
@@ -28,6 +29,7 @@ interface AuthRouterDependencies {
   csrfProtection: RequestHandler;
   loginRateLimiter: LoginRateLimiter;
   secureCookies: boolean;
+  authRepository: AuthRepository;
 }
 
 function toCurrentSession(principal: AuthenticatedPrincipal): CurrentSession {
@@ -89,6 +91,20 @@ export function createAuthRouter(dependencies: AuthRouterDependencies) {
 
   router.get("/me", authenticate, (request, response) => {
     response.json({ data: toCurrentSession(request.principal!) });
+  });
+
+  router.patch("/profile", authenticate, async (request, response) => {
+    const input = updateUserSchema.parse(request.body);
+    const principal = request.principal!;
+
+    if (input.displayName) {
+      await dependencies.authRepository.updateUserProfile(principal.user.id, input.displayName);
+    }
+
+    const token = readSessionToken(request.headers.cookie);
+    const updatedPrincipal = token ? await dependencies.authenticator.authenticate(token) : null;
+
+    response.json({ data: updatedPrincipal ? toCurrentSession(updatedPrincipal) : toCurrentSession(principal) });
   });
 
   return router;

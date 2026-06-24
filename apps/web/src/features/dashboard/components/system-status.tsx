@@ -31,7 +31,7 @@ function StatusCard({ icon, title, detail, tone }: { icon: React.ReactNode; titl
   const tones = {
     success: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
     warning: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
-    neutral: "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300",
+    neutral: "border-border bg-card text-card-foreground",
   };
   return (
     <div className={`flex items-center gap-3 rounded-2xl border p-4 ${tones[tone]}`}>

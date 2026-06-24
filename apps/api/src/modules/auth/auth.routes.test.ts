@@ -6,6 +6,7 @@ import { errorHandler, requestContext } from "../../shared/http/middleware.js";
 import { createAuthRouter } from "./auth.routes.js";
 import { createCsrfProtection } from "./csrf.middleware.js";
 import { LoginRateLimiter } from "./login-rate-limiter.js";
+import type { AuthRepository } from "./auth.repository.js";
 import type { AuthenticationService, LoginService } from "./auth.service.js";
 import type { AuthenticatedPrincipal } from "./auth.types.js";
 
@@ -28,6 +29,8 @@ describe("authentication routes", () => {
     });
     const logout = vi.fn<LoginService["logout"]>().mockResolvedValue(undefined);
 
+    const updateUserProfile = vi.fn<AuthRepository["updateUserProfile"]>();
+
     const app = express();
     app.use(requestContext);
     app.use(express.json());
@@ -37,6 +40,7 @@ describe("authentication routes", () => {
       csrfProtection: createCsrfProtection("https://app.example.com"),
       loginRateLimiter: new LoginRateLimiter(),
       secureCookies: true,
+      authRepository: { updateUserProfile } as unknown as AuthRepository,
     }));
     app.use(errorHandler);
 
@@ -91,6 +95,8 @@ describe("authentication routes", () => {
     const login = vi.fn<LoginService["login"]>();
     const logout = vi.fn<LoginService["logout"]>();
 
+    const updateUserProfile = vi.fn<AuthRepository["updateUserProfile"]>();
+
     const app = express();
     app.use(requestContext);
     app.use(express.json());
@@ -100,6 +106,7 @@ describe("authentication routes", () => {
       csrfProtection: createCsrfProtection("https://app.example.com"),
       loginRateLimiter: new LoginRateLimiter(),
       secureCookies: true,
+      authRepository: { updateUserProfile } as unknown as AuthRepository,
     }));
     app.use(errorHandler);
 
