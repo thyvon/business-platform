@@ -13,7 +13,7 @@ import {
   sessions,
   users,
 } from "@business/database";
-import { and, asc, eq, gt, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, lt, lte, or } from "drizzle-orm";
 import type {
   AuthenticatedPrincipal,
   AuthenticatedRole,
@@ -122,6 +122,51 @@ export class AuthRepository implements LoginSessionStore {
       .where(eq(users.id, userId));
   }
 
+  async findPasswordHashByUserId(userId: string): Promise<string | null> {
+    const rows = await this.database
+      .select({ passwordHash: users.passwordHash })
+      .from(users)
+      .where(and(eq(users.id, userId), eq(users.status, "active")))
+      .limit(1);
+
+    return rows[0]?.passwordHash ?? null;
+  }
+
+  async changePasswordAndRevokeSessions(
+    principal: AuthenticatedPrincipal,
+    passwordHash: string,
+    requestId: string,
+    changedAt: Date,
+  ): Promise<void> {
+    await this.database.transaction(async (transaction) => {
+      await transaction
+        .update(users)
+        .set({ passwordHash, passwordChangedAt: changedAt, updatedAt: changedAt })
+        .where(eq(users.id, principal.user.id));
+
+      await transaction
+        .update(sessions)
+        .set({ revokedAt: changedAt })
+        .where(and(eq(sessions.userId, principal.user.id), isNull(sessions.revokedAt)));
+
+      await transaction.insert(auditEvents).values({
+        id: randomUUID(),
+        organizationId: principal.organization.id,
+        actorUserId: principal.user.id,
+        action: "auth.password.changed",
+        targetType: "user",
+        targetId: principal.user.id,
+        requestId,
+        createdAt: changedAt,
+      });
+    });
+  }
+
+  async deleteExpiredSessions(now: Date): Promise<void> {
+    await this.database
+      .delete(sessions)
+      .where(lt(sessions.expiresAt, now));
+  }
   async findByTokenHash(tokenHash: string, now: Date): Promise<AuthenticatedPrincipal | null> {
     const rows = await this.database
       .select({

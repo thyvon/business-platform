@@ -71,8 +71,8 @@ Only mark work complete after its relevant validation passes.
 - [x] Implement login
 - [x] Implement logout
 - [x] Implement current-session endpoint
-- [ ] Implement password change
-- [ ] Implement session expiry and cleanup
+- [x] Implement password change
+- [x] Implement session expiry and cleanup
 - [x] Add login rate limiting and generic errors
 - [x] Add authentication audit events
 
@@ -81,9 +81,9 @@ Only mark work complete after its relevant validation passes.
 - [x] Create public authentication layout
 - [x] Create accessible login page
 - [x] Add protected application layout
-- [ ] Add safe return-path handling
+- [x] Add safe return-path handling
 - [x] Add account menu and logout
-- [ ] Add Access Denied and expired-session states
+- [x] Add Access Denied and expired-session states
 
 ### Tests
 
@@ -94,14 +94,14 @@ Only mark work complete after its relevant validation passes.
 
 ## Phase 3: User Administration
 
-- [ ] Implement paginated user list API
+- [x] Implement paginated user list API
 - [ ] Implement user detail API
 - [ ] Implement user update
 - [ ] Implement suspend/reactivate
 - [ ] Implement role assignment
 - [ ] Implement session revocation
-- [ ] Create `/settings/users` page
-- [ ] Add search, status filter, and role filter
+- [x] Create `/settings/users` page
+- [ ] Add search, status filter, and role filter *(search and status are implemented; role filter still remains)*
 - [ ] Add user action dialogs
 - [ ] Add user administration tests
 
@@ -140,8 +140,8 @@ Only mark work complete after its relevant validation passes.
 
 ## Current Step
 
-Run the first manual browser login and logout journey with the provisioned development Owner.
+Run the manual Phase 2 browser journey, then manually review /settings/users with the provisioned Owner.
 
 ## Next Step
 
-Add safe return-path handling and clear expired-session and access-denied states before protecting business API routes.
+Continue Phase 3 with user detail, user update, role filter data, and safe action dialogs.

@@ -7,12 +7,16 @@ import { sql } from "drizzle-orm";
 import { env } from "./config/env.js";
 import { AuthRepository } from "./modules/auth/auth.repository.js";
 import { createAuthRouter } from "./modules/auth/auth.routes.js";
+import { createAuthenticate } from "./modules/auth/auth.middleware.js";
 import { createCsrfProtection } from "./modules/auth/csrf.middleware.js";
 import { LoginRateLimiter } from "./modules/auth/login-rate-limiter.js";
-import { AuthenticationService, LoginService } from "./modules/auth/auth.service.js";
+import { AuthenticationService, PasswordService } from "./modules/auth/auth.service.js";
 import { ProductRepository } from "./modules/products/product.repository.js";
+import { UserRepository } from "./modules/users/user.repository.js";
 import { createProductRouter } from "./modules/products/product.routes.js";
 import { ProductService } from "./modules/products/product.service.js";
+import { createUserRouter } from "./modules/users/user.routes.js";
+import { UserService } from "./modules/users/user.service.js";
 import { errorHandler, notFoundHandler, requestContext } from "./shared/http/middleware.js";
 
 export function createApp(database: Database["db"]) {
@@ -30,14 +34,22 @@ export function createApp(database: Database["db"]) {
   });
 
   const authRepository = new AuthRepository(database);
+  const authenticator = new AuthenticationService(authRepository);
+  const authenticate = createAuthenticate(authenticator);
+  const authSessions = new PasswordService(authRepository, env.sessionTtlMs);
+  void authRepository.deleteExpiredSessions(new Date()).catch(() => undefined);
+
   app.use("/api/v1/auth", createAuthRouter({
-    authenticator: new AuthenticationService(authRepository),
-    loginSessions: new LoginService(authRepository, env.sessionTtlMs),
+    authenticator,
+    loginSessions: authSessions,
     csrfProtection: createCsrfProtection(env.webOrigin),
     loginRateLimiter: new LoginRateLimiter(),
     secureCookies: env.isProduction,
     authRepository,
   }));
+
+  const userService = new UserService(new UserRepository(database));
+  app.use("/api/v1/users", createUserRouter(userService, authenticate));
 
   const productService = new ProductService(new ProductRepository(database));
   app.use("/api/v1/products", createProductRouter(productService));

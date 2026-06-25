@@ -1,10 +1,11 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { verifyPassword } from "@business/database";
+import { hashPassword, verifyPassword } from "@business/database";
 import { AppError } from "../../shared/errors/app-error.js";
 import type {
   AuthenticatedPrincipal,
   LoginAccount,
   LoginSessionStore,
+  PasswordChangeStore,
   SessionPrincipalStore,
 } from "./auth.types.js";
 
@@ -44,8 +45,8 @@ export class AuthenticationService implements SessionAuthenticator {
 
 export class LoginService {
   constructor(
-    private readonly store: LoginSessionStore,
-    private readonly sessionTtlMs: number,
+    protected readonly store: LoginSessionStore,
+    protected readonly sessionTtlMs: number,
   ) {}
 
   async login(
@@ -69,7 +70,7 @@ export class LoginService {
     return this.store.revokeSession(principal, requestId, now);
   }
 
-  private async createSession(
+  protected async createSession(
     account: LoginAccount,
     metadata: LoginMetadata,
     now: Date,
@@ -95,5 +96,48 @@ export class LoginService {
     }
 
     return { token, principal };
+  }
+}
+export class PasswordService extends LoginService {
+  constructor(
+    protected readonly store: PasswordChangeStore,
+    sessionTtlMs: number,
+  ) {
+    super(store, sessionTtlMs);
+  }
+
+  async changePassword(
+    principal: AuthenticatedPrincipal,
+    currentPassword: string,
+    newPassword: string,
+    metadata: LoginMetadata,
+    now = new Date(),
+  ): Promise<LoginResult> {
+    const passwordHash = await this.store.findPasswordHashByUserId(principal.user.id);
+    const passwordMatches = passwordHash
+      ? await verifyPassword(passwordHash, currentPassword).catch(() => false)
+      : false;
+
+    if (!passwordHash || !passwordMatches) {
+      throw new AppError(401, "INVALID_CURRENT_PASSWORD", "The current password is incorrect.");
+    }
+
+    const newPasswordHash = await hashPassword(newPassword);
+    await this.store.changePasswordAndRevokeSessions(
+      principal,
+      newPasswordHash,
+      metadata.requestId,
+      now,
+    );
+
+    return this.createSession({
+      userId: principal.user.id,
+      email: principal.user.email,
+      displayName: principal.user.displayName,
+      passwordHash: newPasswordHash,
+      organizationId: principal.organization.id,
+      organizationName: principal.organization.name,
+      membershipId: principal.membershipId,
+    }, metadata, now);
   }
 }

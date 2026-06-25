@@ -1,13 +1,22 @@
 import type { Metadata } from "next";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { getSafeReturnPath } from "@/lib/auth-redirect";
 import { getCurrentSession } from "@/lib/server-auth";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[]; reason?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const returnPath = getSafeReturnPath(params.next);
+  const reason = Array.isArray(params.reason) ? params.reason[0] : params.reason;
   const session = await getCurrentSession();
-  if (session) redirect("/");
+  if (session) redirect(returnPath as Route);
 
   return (
     <main className="flex min-h-screen">
@@ -38,7 +47,10 @@ export default async function LoginPage() {
               Sign in with the account provided by your organization.
             </p>
           </div>
-          <LoginForm />
+          <LoginForm
+            returnPath={returnPath}
+            notice={reason === "expired" ? "Your session expired. Please sign in again to continue." : null}
+          />
         </div>
       </div>
     </main>

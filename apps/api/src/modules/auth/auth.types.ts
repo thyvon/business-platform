@@ -48,3 +48,14 @@ export interface LoginSessionStore extends SessionPrincipalStore {
   createSession(session: NewSession): Promise<void>;
   revokeSession(principal: AuthenticatedPrincipal, requestId: string, revokedAt: Date): Promise<void>;
 }
+
+export interface PasswordChangeStore extends LoginSessionStore {
+  findPasswordHashByUserId(userId: string): Promise<string | null>;
+  changePasswordAndRevokeSessions(
+    principal: AuthenticatedPrincipal,
+    passwordHash: string,
+    requestId: string,
+    changedAt: Date,
+  ): Promise<void>;
+  deleteExpiredSessions(now: Date): Promise<void>;
+}

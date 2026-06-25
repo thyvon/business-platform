@@ -1,4 +1,4 @@
-import { loginSchema, updateUserSchema, type CurrentSession } from "@business/contracts";
+import { changePasswordSchema, loginSchema, updateUserSchema, type CurrentSession } from "@business/contracts";
 import { Router } from "express";
 import type { RequestHandler } from "express";
 import { AppError } from "../../shared/errors/app-error.js";
@@ -17,6 +17,13 @@ interface LoginSessions {
   login(
     email: string,
     password: string,
+    metadata: LoginMetadata,
+    now?: Date,
+  ): Promise<LoginResult>;
+  changePassword(
+    principal: AuthenticatedPrincipal,
+    currentPassword: string,
+    newPassword: string,
     metadata: LoginMetadata,
     now?: Date,
   ): Promise<LoginResult>;
@@ -87,6 +94,25 @@ export function createAuthRouter(dependencies: AuthRouterDependencies) {
     );
     response.setHeader("set-cookie", clearSessionCookie(dependencies.secureCookies));
     response.status(204).send();
+  });
+  router.post("/change-password", dependencies.csrfProtection, authenticate, async (request, response) => {
+    const input = changePasswordSchema.parse(request.body);
+    const result = await dependencies.loginSessions.changePassword(
+      request.principal!,
+      input.currentPassword,
+      input.newPassword,
+      {
+        ipAddress: request.ip || null,
+        userAgent: request.header("user-agent")?.slice(0, 2_000) ?? null,
+        requestId: String(response.locals.requestId),
+      },
+    );
+
+    response.setHeader(
+      "set-cookie",
+      createSessionCookie(result.token, result.principal.expiresAt, dependencies.secureCookies),
+    );
+    response.json({ data: toCurrentSession(result.principal) });
   });
 
   router.get("/me", authenticate, (request, response) => {

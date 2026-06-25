@@ -27,6 +27,10 @@ describe("authentication routes", () => {
       token: "a-secure-random-session-token-with-enough-entropy",
       principal,
     });
+    const changePassword = vi.fn().mockResolvedValue({
+      token: "a-new-secure-random-session-token-with-enough-entropy",
+      principal,
+    });
     const logout = vi.fn<LoginService["logout"]>().mockResolvedValue(undefined);
 
     const updateUserProfile = vi.fn<AuthRepository["updateUserProfile"]>();
@@ -36,7 +40,7 @@ describe("authentication routes", () => {
     app.use(express.json());
     app.use("/auth", createAuthRouter({
       authenticator: { authenticate },
-      loginSessions: { login, logout },
+      loginSessions: { login, changePassword, logout },
       csrfProtection: createCsrfProtection("https://app.example.com"),
       loginRateLimiter: new LoginRateLimiter(),
       secureCookies: true,
@@ -70,6 +74,22 @@ describe("authentication routes", () => {
       });
       expect(meResponse.status).toBe(200);
 
+      const changePasswordResponse = await fetch(baseUrl + "/auth/change-password", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: sessionCookie?.split(";")[0] ?? "",
+          origin: "https://app.example.com",
+        },
+        body: JSON.stringify({
+          currentPassword: "valid-password",
+          newPassword: "a-new-valid-password",
+        }),
+      });
+      expect(changePasswordResponse.status).toBe(200);
+      expect(changePasswordResponse.headers.get("set-cookie")).toContain("bp_session=");
+      expect(changePassword).toHaveBeenCalledOnce();
+
       const logoutResponse = await fetch(baseUrl + "/auth/logout", {
         method: "POST",
         headers: {
@@ -93,6 +113,7 @@ describe("authentication routes", () => {
   it("rejects login requests from an untrusted origin before checking credentials", async () => {
     const authenticate = vi.fn<AuthenticationService["authenticate"]>();
     const login = vi.fn<LoginService["login"]>();
+    const changePassword = vi.fn();
     const logout = vi.fn<LoginService["logout"]>();
 
     const updateUserProfile = vi.fn<AuthRepository["updateUserProfile"]>();
@@ -102,7 +123,7 @@ describe("authentication routes", () => {
     app.use(express.json());
     app.use("/auth", createAuthRouter({
       authenticator: { authenticate },
-      loginSessions: { login, logout },
+      loginSessions: { login, changePassword, logout },
       csrfProtection: createCsrfProtection("https://app.example.com"),
       loginRateLimiter: new LoginRateLimiter(),
       secureCookies: true,

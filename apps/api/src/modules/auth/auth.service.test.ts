@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { LoginService } from "./auth.service.js";
+import { LoginService, PasswordService } from "./auth.service.js";
 import type {
   AuthenticatedPrincipal,
   LoginAccount,
   LoginSessionStore,
   NewSession,
+  PasswordChangeStore,
 } from "./auth.types.js";
 
 const password = "not-a-real-user-password";
@@ -109,5 +110,59 @@ describe("LoginService", () => {
     await service.logout(principal, "request-id", now);
 
     expect(fakes.revokeSession).toHaveBeenCalledWith(principal, "request-id", now);
+  });
+});
+describe("PasswordService", () => {
+  function createPasswordStore(resolvedPrincipal: AuthenticatedPrincipal | null) {
+    const fakes = createStore(account, resolvedPrincipal);
+    const findPasswordHashByUserId = vi.fn<PasswordChangeStore["findPasswordHashByUserId"]>()
+      .mockResolvedValue(account.passwordHash);
+    const changePasswordAndRevokeSessions = vi.fn<PasswordChangeStore["changePasswordAndRevokeSessions"]>()
+      .mockResolvedValue(undefined);
+    const deleteExpiredSessions = vi.fn<PasswordChangeStore["deleteExpiredSessions"]>()
+      .mockResolvedValue(undefined);
+    const store: PasswordChangeStore = {
+      ...fakes.store,
+      findPasswordHashByUserId,
+      changePasswordAndRevokeSessions,
+      deleteExpiredSessions,
+    };
+    return { ...fakes, store, findPasswordHashByUserId, changePasswordAndRevokeSessions };
+  }
+
+  it("changes the password, revokes existing sessions, and returns a rotated session", async () => {
+    const fakes = createPasswordStore(principal);
+    const service = new PasswordService(fakes.store, 12 * 60 * 60 * 1_000);
+    const now = new Date("2030-01-01T00:00:00.000Z");
+
+    const result = await service.changePassword(principal, password, "a-new-valid-password", {
+      ipAddress: "127.0.0.1",
+      userAgent: "test",
+      requestId: "request-id",
+    }, now);
+
+    expect(result.principal).toBe(principal);
+    expect(fakes.findPasswordHashByUserId).toHaveBeenCalledWith(principal.user.id);
+    expect(fakes.changePasswordAndRevokeSessions).toHaveBeenCalledWith(
+      principal,
+      expect.stringContaining("$argon2id$"),
+      "request-id",
+      now,
+    );
+    expect(fakes.createSession).toHaveBeenCalledOnce();
+  });
+
+  it("rejects an incorrect current password without changing stored credentials", async () => {
+    const fakes = createPasswordStore(principal);
+    const service = new PasswordService(fakes.store, 12 * 60 * 60 * 1_000);
+
+    await expect(service.changePassword(principal, "wrong-password", "a-new-valid-password", {
+      ipAddress: null,
+      userAgent: null,
+      requestId: "request-id",
+    })).rejects.toMatchObject({ statusCode: 401, code: "INVALID_CURRENT_PASSWORD" });
+
+    expect(fakes.changePasswordAndRevokeSessions).not.toHaveBeenCalled();
+    expect(fakes.createSession).not.toHaveBeenCalled();
   });
 });

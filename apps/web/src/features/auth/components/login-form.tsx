@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import type { CurrentSession } from "@business/contracts";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest, ApiClientError } from "@/lib/api-client";
 
-export function LoginForm() {
+export function LoginForm({
+  returnPath,
+  notice,
+}: {
+  returnPath: string;
+  notice?: string | null;
+}) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +38,7 @@ export function LoginForm() {
         credentials: "same-origin",
         body: JSON.stringify({ email, password }),
       });
-      router.replace("/");
+      router.replace(returnPath as Route);
       router.refresh();
     } catch (error) {
       setErrorMessage(
@@ -48,6 +55,14 @@ export function LoginForm() {
     <Card className="shadow-xl ring-0">
       <form onSubmit={handleSubmit}>
       <CardContent className="p-8 sm:p-10">
+      {notice && !errorMessage && (
+        <div
+          role="status"
+          className="mb-6 rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary"
+        >
+          {notice}
+        </div>
+      )}
       {errorMessage && (
         <div
           role="alert"

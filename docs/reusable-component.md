@@ -460,8 +460,12 @@ apps/web/src/components/ui/
 ├── input.tsx            # Base UI input with focus and disabled states
 ├── label.tsx            # Accessible label with peer-disabled styling
 ├── progress.tsx         # Progress, ProgressTrack, ProgressIndicator, ProgressLabel, ProgressValue
+├── select.tsx           # Single-value Select built on Base UI Select
+├── multi-select.tsx     # Multi-value checklist select built on Base UI Menu
 ├── progress-bar.tsx     # Route-level navigation progress bar (decorative only)
-└── sheet.tsx            # Overlay drawer with focus trap, ESC close, and backdrop
+├── sheet.tsx            # Overlay drawer with focus trap, ESC close, and backdrop
+├── table.tsx            # Accessible table markup and shared table styling
+└── data-table.tsx       # Typed listing shell with empty, mobile, and pagination states
 ```
 
 Layout components are in `apps/web/src/components/layout/`. Feature-specific UI is in `apps/web/src/features/<feature>/components/`.
