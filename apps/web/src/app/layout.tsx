@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider, type Theme } from "@/lib/theme-context";
 import { ColorSchemeProvider } from "@/lib/color-scheme-context";
 import { CornerRadiusProvider } from "@/lib/corner-radius-context";
@@ -27,8 +28,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" className={theme === "dark" ? "dark" : ""} style={dynamicUiStyle}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter/inter-latin-500-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter/inter-latin-700-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/kantumruy-pro/kantumruy-pro-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/kantumruy-pro/kantumruy-pro-khmer-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/kantumruy-pro/kantumruy-pro-latin-500-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
@@ -41,6 +44,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <ColorSchemeProvider initialScheme={colorScheme}>
             <CornerRadiusProvider initialValue={cornerRadius}>
               {children}
+              <Toaster />
             </CornerRadiusProvider>
           </ColorSchemeProvider>
         </ThemeProvider>

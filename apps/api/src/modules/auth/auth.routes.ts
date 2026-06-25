@@ -119,7 +119,7 @@ export function createAuthRouter(dependencies: AuthRouterDependencies) {
     response.json({ data: toCurrentSession(request.principal!) });
   });
 
-  router.patch("/profile", authenticate, async (request, response) => {
+  router.patch("/profile", dependencies.csrfProtection, authenticate, async (request, response) => {
     const input = updateUserSchema.parse(request.body);
     const principal = request.principal!;
 

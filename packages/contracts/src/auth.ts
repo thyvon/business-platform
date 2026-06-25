@@ -115,7 +115,7 @@ export const currentSessionSchema = z.object({
 
 export const userListQuerySchema = z.object({
   search: z.string().trim().max(255).optional(),
-  status: userStatusSchema.optional(),
+  status: membershipStatusSchema.optional(),
   roleId: idSchema.optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -132,6 +132,10 @@ export const userListItemSchema = z.object({
   roles: z.array(roleSummarySchema),
   lastLoginAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
+}).strict();
+
+export const userDetailResponseSchema = userListItemSchema.extend({
+  membershipId: idSchema,
 }).strict();
 
 export const userListResponseSchema = z.object({
@@ -186,6 +190,7 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type CurrentSession = z.infer<typeof currentSessionSchema>;
 export type UserListQuery = z.infer<typeof userListQuerySchema>;
 export type UserListItem = z.infer<typeof userListItemSchema>;
+export type UserDetailResponse = z.infer<typeof userDetailResponseSchema>;
 export type UserListResponse = z.infer<typeof userListResponseSchema>;
 export type InviteUserInput = z.infer<typeof inviteUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
@@ -194,3 +199,4 @@ export type CreateRoleInput = z.infer<typeof createRoleSchema>;
 export type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
 export type SetRolePermissionsInput = z.infer<typeof setRolePermissionsSchema>;
 export type RoleDetail = z.infer<typeof roleDetailSchema>;
+

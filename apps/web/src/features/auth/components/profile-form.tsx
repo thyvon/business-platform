@@ -5,6 +5,7 @@ import { Check, KeyRound, LoaderCircle, Pencil, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import type { CurrentSession } from "@business/contracts";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,12 +16,10 @@ import { buildLoginPath } from "@/lib/auth-redirect";
 
 export function ProfileForm({ session }: { session: CurrentSession }) {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState(session.user.displayName);
   const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   function redirectExpiredSession() {
     router.replace(buildLoginPath("/profile", "expired") as Route);
@@ -30,13 +29,12 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
-    setErrorMessage(null);
 
     const form = new FormData(event.currentTarget);
-    const displayName = String(form.get("displayName") ?? "").trim();
+    const newDisplayName = String(form.get("displayName") ?? "").trim();
 
-    if (!displayName) {
-      setErrorMessage("Display name is required.");
+    if (!newDisplayName) {
+      toast.error("Display name is required.");
       setSubmitting(false);
       return;
     }
@@ -44,16 +42,17 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
     try {
       await apiRequest<CurrentSession>("/auth/profile", {
         method: "PATCH",
-        body: JSON.stringify({ displayName }),
+        body: JSON.stringify({ displayName: newDisplayName }),
       });
+      setDisplayName(newDisplayName);
       setEditing(false);
-      router.refresh();
+      toast.success("Profile updated successfully.");
     } catch (error) {
       if (error instanceof ApiClientError && error.status === 401) {
         redirectExpiredSession();
         return;
       }
-      setErrorMessage(
+      toast.error(
         error instanceof ApiClientError
           ? error.message
           : "Failed to update profile. Please try again.",
@@ -66,8 +65,6 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
   async function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setChangingPassword(true);
-    setPasswordError(null);
-    setPasswordSuccess(null);
 
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
@@ -76,7 +73,7 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
     const confirmPassword = String(form.get("confirmPassword") ?? "");
 
     if (newPassword !== confirmPassword) {
-      setPasswordError("The new password and confirmation do not match.");
+      toast.error("The new password and confirmation do not match.");
       setChangingPassword(false);
       return;
     }
@@ -87,14 +84,14 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
       formElement.reset();
-      setPasswordSuccess("Password changed. Your active session was refreshed.");
+      toast.success("Password changed. Your active session was refreshed.");
       router.refresh();
     } catch (error) {
       if (error instanceof ApiClientError && error.status === 401 && error.code === "AUTHENTICATION_REQUIRED") {
         redirectExpiredSession();
         return;
       }
-      setPasswordError(
+      toast.error(
         error instanceof ApiClientError
           ? error.message
           : "Failed to change password. Please try again.",
@@ -110,13 +107,13 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <CardTitle>{session.user.displayName}</CardTitle>
+              <CardTitle>{displayName}</CardTitle>
               <CardDescription>{session.user.email}</CardDescription>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { setEditing((value) => !value); setErrorMessage(null); }}
+              onClick={() => setEditing((value) => !value)}
               aria-label={editing ? "Cancel editing" : "Edit profile"}
             >
               {editing ? <X className="size-4" /> : <Pencil className="size-4" />}
@@ -125,15 +122,6 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {errorMessage && (
-            <div
-              role="alert"
-              className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-            >
-              {errorMessage}
-            </div>
-          )}
-
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -183,22 +171,6 @@ export function ProfileForm({ session }: { session: CurrentSession }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordChange} className="space-y-4">
-            {passwordError && (
-              <div
-                role="alert"
-                className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              >
-                {passwordError}
-              </div>
-            )}
-            {passwordSuccess && (
-              <div
-                role="status"
-                className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary"
-              >
-                {passwordSuccess}
-              </div>
-            )}
             <div>
               <Label htmlFor="currentPassword">Current password</Label>
               <Input

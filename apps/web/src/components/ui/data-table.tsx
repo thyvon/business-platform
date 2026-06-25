@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import type { Route } from "next";
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTablePaginationBar } from "@/components/ui/data-table-pagination-bar";
 import { cn } from "@/lib/utils";
+
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export interface DataTableColumn<TItem> {
   id: string;
@@ -19,8 +20,9 @@ export interface DataTablePagination {
   pageSize: number;
   total: number;
   totalPages: number;
-  previousHref: string;
-  nextHref: string;
+  previousHref: Route;
+  nextHref: Route;
+  pageSizeHrefs?: Record<number, Route>;
 }
 
 export interface DataTableProps<TItem> {
@@ -30,8 +32,8 @@ export interface DataTableProps<TItem> {
   emptyTitle: string;
   emptyDescription?: string;
   pagination?: DataTablePagination;
+  pageSizeOptions?: number[];
   minWidthClassName?: string;
-  renderMobileItem?: (item: TItem) => ReactNode;
   loading?: boolean;
   loadingLabel?: string;
   className?: string;
@@ -44,8 +46,8 @@ export function DataTable<TItem>({
   emptyTitle,
   emptyDescription,
   pagination,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   minWidthClassName = "min-w-[760px]",
-  renderMobileItem,
   loading = false,
   loadingLabel = "Loading rows",
   className,
@@ -62,29 +64,7 @@ export function DataTable<TItem>({
     <div className={cn("space-y-3", className)} aria-busy={loading || undefined}>
       <Card className="py-0">
         <CardContent className="p-0">
-          {renderMobileItem && !loading && !hasRows && (
-            <div className="px-6 py-12 text-center md:hidden">
-              <h2 className="text-base font-semibold text-foreground">{emptyTitle}</h2>
-              {emptyDescription && (
-                <p className="mt-2 text-sm text-muted-foreground">{emptyDescription}</p>
-              )}
-            </div>
-          )}
-          {loading && renderMobileItem && (
-            <div className="md:hidden">
-              <DataTablePreloader label={loadingLabel} />
-            </div>
-          )}
-          {renderMobileItem && !loading && hasRows && (
-            <div className="divide-y divide-border md:hidden">
-              {items.map((item) => (
-                <div key={getItemKey(item)} className="p-4">
-                  {renderMobileItem(item)}
-                </div>
-              ))}
-            </div>
-          )}
-          <div className={cn("overflow-x-auto", renderMobileItem && "hidden md:block")}>
+          <div className="overflow-x-auto">
             <Table className={minWidthClassName}>
               <TableHeader>
                 <TableRow>
@@ -128,39 +108,17 @@ export function DataTable<TItem>({
             </Table>
           </div>
         </CardContent>
+        {pagination && (
+          <CardFooter className="border-t-0 px-0 py-3">
+            <DataTablePaginationBar
+              pagination={pagination}
+              pageSizeOptions={pageSizeOptions}
+              showingStart={showingStart}
+              showingEnd={showingEnd}
+            />
+          </CardFooter>
+        )}
       </Card>
-
-      {pagination && (
-        <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>
-            Showing {showingStart}-{showingEnd} of {pagination.total} rows
-          </span>
-          <div className="flex gap-2">
-            <Link
-              href={pagination.previousHref as Route}
-              aria-disabled={pagination.page <= 1}
-              className={buttonVariants({
-                variant: "outline",
-                size: "sm",
-                className: pagination.page <= 1 ? "pointer-events-none opacity-50" : "",
-              })}
-            >
-              Previous
-            </Link>
-            <Link
-              href={pagination.nextHref as Route}
-              aria-disabled={pagination.totalPages <= pagination.page}
-              className={buttonVariants({
-                variant: "outline",
-                size: "sm",
-                className: pagination.totalPages <= pagination.page ? "pointer-events-none opacity-50" : "",
-              })}
-            >
-              Next
-            </Link>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

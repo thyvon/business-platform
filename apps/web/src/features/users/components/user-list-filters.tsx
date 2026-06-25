@@ -93,7 +93,7 @@ export function UserListFilters({ query }: { query: UserListQuery }) {
             </div>
           </div>
           <div>
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">Membership</Label>
             <Select
               id="status"
               name="status"
@@ -103,7 +103,7 @@ export function UserListFilters({ query }: { query: UserListQuery }) {
                 setStatus(statusValue);
                 updateUrl({ status: statusValue });
               }}
-              placeholder="All statuses"
+              placeholder="All memberships"
               options={statusOptions}
               triggerClassName="mt-2"
             />
@@ -119,7 +119,7 @@ export function UserListFilters({ query }: { query: UserListQuery }) {
   );
 }
 const statusOptions = [
-  { value: "pending", label: "Pending" },
+  { value: "invited", label: "Invited" },
   { value: "active", label: "Active" },
   { value: "suspended", label: "Suspended" },
 ];

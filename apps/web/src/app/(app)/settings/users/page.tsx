@@ -4,13 +4,17 @@ import type { Route } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { UserRoundPlus, UsersRound } from "lucide-react";
+import Link from "next/link";
 import { userListQuerySchema, userListResponseSchema, type UserListItem, type UserListQuery, type UserListResponse } from "@business/contracts/auth";
 import { Badge } from "@/components/ui/badge";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableToolbar, type DataTableToolbarFilter } from "@/components/ui/data-table-toolbar";
 import { buildLoginPath } from "@/lib/auth-redirect";
 import { getCurrentSession } from "@/lib/server-auth";
-import { UserListFilters } from "@/features/users/components/user-list-filters";
+import { UserActions } from "@/features/users/components/user-actions";
+
 
 export const metadata: Metadata = { title: "Users" };
 
@@ -19,6 +23,7 @@ const apiOrigin = (process.env.API_INTERNAL_URL || "http://127.0.0.1:4000").repl
 type SearchParams = Promise<{
   search?: string | string[];
   status?: string | string[];
+  roleId?: string | string[];
   page?: string | string[];
   pageSize?: string | string[];
   sort?: string | string[];
@@ -33,6 +38,7 @@ function parseQuery(params: Awaited<SearchParams>): UserListQuery {
   const parsed = userListQuerySchema.safeParse({
     search: firstValue(params.search) || undefined,
     status: firstValue(params.status) || undefined,
+    roleId: firstValue(params.roleId) || undefined,
     page: firstValue(params.page) || "1",
     pageSize: firstValue(params.pageSize) || "10",
     sort: firstValue(params.sort) || "displayName",
@@ -50,6 +56,7 @@ function usersPath(query: UserListQuery, changes: Partial<UserListQuery>): Route
 
   if (nextQuery.search) params.set("search", nextQuery.search);
   if (nextQuery.status) params.set("status", nextQuery.status);
+  if (nextQuery.roleId) params.set("roleId", nextQuery.roleId);
   if (nextQuery.page > 1) params.set("page", String(nextQuery.page));
   if (nextQuery.pageSize !== 10) params.set("pageSize", String(nextQuery.pageSize));
   if (nextQuery.sort !== "displayName") params.set("sort", nextQuery.sort);
@@ -102,8 +109,57 @@ export default async function UsersPage({ searchParams }: { searchParams: Search
 
   const query = parseQuery(await searchParams);
 
+  const rolesResponse = await fetch(`${apiOrigin}/api/v1/roles`, {
+    headers: { cookie: (await cookies()).toString() },
+    cache: "no-store",
+  });
+
+  if (rolesResponse.status === 401) redirect(buildLoginPath("/settings/users", "expired") as Route);
+  if (rolesResponse.status === 403) redirect("/access-denied" as Route);
+  if (!rolesResponse.ok) throw new Error("The role filter could not be loaded.");
+
+  const rolesPayload = await rolesResponse.json() as { data: Array<{ id: string; name: string }> };
+  const rolesData = rolesPayload.data;
+
+  const roleOptions = rolesData.map((r) => ({ value: r.id, label: r.name }));
+
+  const userFilters: DataTableToolbarFilter[] = [
+    {
+      id: "status",
+      label: "Membership",
+      placeholder: "All memberships",
+      options: [
+        { value: "invited", label: "Invited" },
+        { value: "active", label: "Active" },
+        { value: "suspended", label: "Suspended" },
+      ],
+    },
+    {
+      id: "roleId",
+      label: "Role",
+      placeholder: "All roles",
+      options: roleOptions,
+    },
+  ];
+
   return (
-    <section className="space-y-6">
+    <>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <Link href={"/" as Route} className="transition-colors hover:text-foreground">Home</Link>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <Link href={"/settings" as Route} className="transition-colors hover:text-foreground">Settings</Link>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Users</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <section className="mt-4 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
@@ -120,26 +176,30 @@ export default async function UsersPage({ searchParams }: { searchParams: Search
         </Button>
       </div>
 
-      <UserListFilters key={query.status ?? ""} query={query} />
+      <DataTableToolbar
+        searchPlaceholder="Name or email"
+        filters={userFilters}
+      />
 
-      <Suspense key={usersTableKey(query)} fallback={<UsersTableLoading />}>
-        <UsersTable query={query} />
+      <Suspense key={usersTableKey(query)} fallback={<UsersTableLoading roleOptions={rolesData} />}>
+        <UsersTable query={query} roleOptions={rolesData} />
       </Suspense>
     </section>
+    </>
   );
 }
 
-async function UsersTable({ query }: { query: UserListQuery }) {
+async function UsersTable({ query, roleOptions }: { query: UserListQuery; roleOptions: Array<{ id: string; name: string }> }) {
   const users = await fetchUsers(query);
+  const columns = createUserColumns(roleOptions);
 
   return (
     <DataTable
-      columns={userColumns}
+      columns={columns}
       items={users.items}
       getItemKey={(user) => user.id}
       emptyTitle="No users found"
-      emptyDescription="Adjust the search or status filter to see more members."
-      renderMobileItem={renderMobileUser}
+      emptyDescription="Adjust the search or membership filter to see more members."
       pagination={{
         page: users.page,
         pageSize: users.pageSize,
@@ -147,55 +207,78 @@ async function UsersTable({ query }: { query: UserListQuery }) {
         totalPages: users.totalPages,
         previousHref: users.page > 1 ? usersPath(query, { page: users.page - 1 }) : usersPath(query, { page: 1 }),
         nextHref: users.totalPages > users.page ? usersPath(query, { page: users.page + 1 }) : usersPath(query, { page: users.page }),
+        pageSizeHrefs: {
+          10: usersPath(query, { pageSize: 10, page: 1 }),
+          20: usersPath(query, { pageSize: 20, page: 1 }),
+          50: usersPath(query, { pageSize: 50, page: 1 }),
+          100: usersPath(query, { pageSize: 100, page: 1 }),
+        },
       }}
     />
   );
 }
 
-function UsersTableLoading() {
+function UsersTableLoading({ roleOptions }: { roleOptions: Array<{ id: string; name: string }> }) {
   return (
     <DataTable<UserListItem>
-      columns={userColumns}
+      columns={createUserColumns(roleOptions)}
       items={[]}
       getItemKey={(user) => user.id}
       emptyTitle="No users found"
-      emptyDescription="Adjust the search or status filter to see more members."
-      renderMobileItem={renderMobileUser}
+      emptyDescription="Adjust the search or membership filter to see more members."
       loading
       loadingLabel="Loading users"
     />
   );
 }
 
-const userColumns: Array<DataTableColumn<UserListItem>> = [
-  {
-    id: "user",
-    header: "User",
-    cell: (user) => <UserIdentity user={user} />,
-  },
-  {
-    id: "status",
-    header: "Status",
-    cell: (user) => <UserStatus user={user} />,
-  },
-  {
-    id: "roles",
-    header: "Roles",
-    cell: (user) => <UserRoles user={user} />,
-  },
-  {
-    id: "lastLogin",
-    header: "Last login",
-    className: "text-muted-foreground",
-    cell: (user) => user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never",
-  },
-  {
-    id: "created",
-    header: "Created",
-    className: "text-muted-foreground",
-    cell: (user) => new Date(user.createdAt).toLocaleDateString(),
-  },
-];
+function createUserColumns(
+  roleOptions: Array<{ id: string; name: string }>,
+): Array<DataTableColumn<UserListItem>> {
+  return [
+    {
+      id: "user",
+      header: "User",
+      cell: (user) => <UserIdentity user={user} />,
+    },
+    {
+      id: "status",
+      header: "Status",
+      cell: (user) => <UserStatus user={user} />,
+    },
+    {
+      id: "roles",
+      header: "Roles",
+      cell: (user) => <UserRoles user={user} />,
+    },
+    {
+      id: "lastLogin",
+      header: "Last login",
+      className: "text-muted-foreground",
+      cell: (user) => user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never",
+    },
+    {
+      id: "created",
+      header: "Created",
+      className: "text-muted-foreground",
+      cell: (user) => new Date(user.createdAt).toLocaleDateString(),
+    },
+    {
+      id: "actions",
+      header: "",
+      className: "w-0",
+      cell: (user) => (
+        <UserActions
+          userId={user.id}
+          displayName={user.displayName}
+          membershipStatus={user.membershipStatus}
+          roleIds={user.roles.map((r) => r.id)}
+          roleOptions={roleOptions}
+        />
+      ),
+    },
+  ];
+}
 
 function UserIdentity({ user }: { user: UserListItem }) {
   return (
@@ -209,8 +292,8 @@ function UserIdentity({ user }: { user: UserListItem }) {
 function UserStatus({ user }: { user: UserListItem }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Badge variant={user.status === "active" ? "secondary" : "outline"}>{user.status}</Badge>
-      <span className="text-xs text-muted-foreground">Membership: {user.membershipStatus}</span>
+      <Badge variant={user.membershipStatus === "active" ? "secondary" : "outline"}>{user.membershipStatus}</Badge>
+      <span className="text-xs text-muted-foreground">Account: {user.status}</span>
     </div>
   );
 }
@@ -227,19 +310,3 @@ function UserRoles({ user }: { user: UserListItem }) {
   );
 }
 
-function renderMobileUser(user: UserListItem) {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-start justify-between gap-4">
-        <UserIdentity user={user} />
-        <Badge variant={user.status === "active" ? "secondary" : "outline"}>{user.status}</Badge>
-      </div>
-      <UserRoles user={user} />
-      <div className="grid gap-1 text-xs text-muted-foreground">
-        <span>Membership: {user.membershipStatus}</span>
-        <span>Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}</span>
-        <span>Created: {new Date(user.createdAt).toLocaleDateString()}</span>
-      </div>
-    </div>
-  );
-}

@@ -5,6 +5,8 @@ import type { AuthenticatedPrincipal } from "../auth/auth.types.js";
 import { createUserRouter } from "./user.routes.js";
 import type { UserService } from "./user.service.js";
 
+const csrfProtection: RequestHandler = (_request, _response, next) => next();
+
 const principal: AuthenticatedPrincipal = {
   sessionId: "session-id",
   user: { id: "user-id", email: "owner@example.com", displayName: "Owner" },
@@ -53,7 +55,7 @@ describe("user routes", () => {
       request.principal = principal;
       next();
     };
-    const handlers = firstRouteHandler(createUserRouter({ list } as unknown as UserService, authenticate));
+    const handlers = firstRouteHandler(createUserRouter({ list } as unknown as UserService, authenticate, csrfProtection));
     const request = { query: { search: "owner" } };
 
     for (const handler of handlers) await invoke(handler, request);
@@ -67,7 +69,7 @@ describe("user routes", () => {
       request.principal = { ...principal, permissions: new Set() };
       next();
     };
-    const handlers = firstRouteHandler(createUserRouter({ list } as unknown as UserService, authenticate));
+    const handlers = firstRouteHandler(createUserRouter({ list } as unknown as UserService, authenticate, csrfProtection));
     const request = { query: {} };
 
     await invoke(handlers[0]!, request);
@@ -81,7 +83,7 @@ describe("user routes", () => {
     const authenticate: RequestHandler = (_request, _response, next) => {
       next(new AppError(401, "AUTHENTICATION_REQUIRED", "Authentication is required."));
     };
-    const handlers = firstRouteHandler(createUserRouter({ list } as unknown as UserService, authenticate));
+    const handlers = firstRouteHandler(createUserRouter({ list } as unknown as UserService, authenticate, csrfProtection));
 
     await expect(invoke(handlers[0]!, { query: {} }))
       .rejects.toMatchObject({ statusCode: 401, code: "AUTHENTICATION_REQUIRED" });

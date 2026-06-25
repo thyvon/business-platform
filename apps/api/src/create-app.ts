@@ -12,6 +12,9 @@ import { createCsrfProtection } from "./modules/auth/csrf.middleware.js";
 import { LoginRateLimiter } from "./modules/auth/login-rate-limiter.js";
 import { AuthenticationService, PasswordService } from "./modules/auth/auth.service.js";
 import { ProductRepository } from "./modules/products/product.repository.js";
+import { RolesRepository } from "./modules/roles/roles.repository.js";
+import { createRolesRouter } from "./modules/roles/roles.routes.js";
+import { RolesService } from "./modules/roles/roles.service.js";
 import { UserRepository } from "./modules/users/user.repository.js";
 import { createProductRouter } from "./modules/products/product.routes.js";
 import { ProductService } from "./modules/products/product.service.js";
@@ -37,19 +40,23 @@ export function createApp(database: Database["db"]) {
   const authenticator = new AuthenticationService(authRepository);
   const authenticate = createAuthenticate(authenticator);
   const authSessions = new PasswordService(authRepository, env.sessionTtlMs);
+  const csrfProtection = createCsrfProtection(env.webOrigin);
   void authRepository.deleteExpiredSessions(new Date()).catch(() => undefined);
 
   app.use("/api/v1/auth", createAuthRouter({
     authenticator,
     loginSessions: authSessions,
-    csrfProtection: createCsrfProtection(env.webOrigin),
+    csrfProtection,
     loginRateLimiter: new LoginRateLimiter(),
     secureCookies: env.isProduction,
     authRepository,
   }));
 
   const userService = new UserService(new UserRepository(database));
-  app.use("/api/v1/users", createUserRouter(userService, authenticate));
+  app.use("/api/v1/users", createUserRouter(userService, authenticate, csrfProtection));
+
+  const rolesService = new RolesService(new RolesRepository(database));
+  app.use("/api/v1/roles", createRolesRouter(rolesService, authenticate, csrfProtection));
 
   const productService = new ProductService(new ProductRepository(database));
   app.use("/api/v1/products", createProductRouter(productService));
@@ -58,3 +65,5 @@ export function createApp(database: Database["db"]) {
   app.use(errorHandler);
   return app;
 }
+
+

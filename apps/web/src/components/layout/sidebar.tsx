@@ -1,27 +1,45 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { ChartNoAxesCombined, PackageSearch, Building2, Settings, X } from "lucide-react";
+import { ChartNoAxesCombined, PackageSearch, Building2, Settings, X, ShieldCheck, UsersRound } from "lucide-react";
+import type { PermissionKey } from "@business/contracts/auth";
 import { Button } from "@/components/ui/button";
 
-const navigation = [
-  { href: "/", label: "Overview", icon: ChartNoAxesCombined },
-  { href: "/products", label: "Products", icon: PackageSearch },
-  { href: "/suppliers", label: "Suppliers", icon: Building2 },
-  { href: "/settings", label: "Settings", icon: Settings },
-] as const;
+interface NavItem {
+  href: Route;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requiredPermission?: PermissionKey;
+}
+
+const navigation: NavItem[] = [
+  { href: "/" as Route, label: "Overview", icon: ChartNoAxesCombined },
+  { href: "/products" as Route, label: "Products", icon: PackageSearch },
+  { href: "/suppliers" as Route, label: "Suppliers", icon: Building2 },
+  { href: "/settings" as Route, label: "Settings", icon: Settings, requiredPermission: "organization.read" },
+  { href: "/settings/users" as Route, label: "Users", icon: UsersRound, requiredPermission: "users.read" },
+  { href: "/settings/roles" as Route, label: "Roles", icon: ShieldCheck, requiredPermission: "roles.read" },
+];
 
 export function Sidebar({
   collapsed,
   mobileOpen,
   onMobileClose,
+  permissions,
 }: {
   collapsed: boolean;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  permissions: PermissionKey[];
 }) {
   const pathname = usePathname();
+
+  const visibleNavigation = navigation.filter((item) => {
+    if (!item.requiredPermission) return true;
+    return permissions.includes(item.requiredPermission);
+  });
 
   return (
     <>
@@ -64,7 +82,7 @@ export function Sidebar({
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {navigation.map(({ href, label, icon: Icon }) => {
+          {visibleNavigation.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
             return (
               <Link

@@ -95,24 +95,26 @@ Only mark work complete after its relevant validation passes.
 ## Phase 3: User Administration
 
 - [x] Implement paginated user list API
-- [ ] Implement user detail API
-- [ ] Implement user update
-- [ ] Implement suspend/reactivate
-- [ ] Implement role assignment
-- [ ] Implement session revocation
+- [x] Implement user detail API
+- [x] Implement user update
+- [x] Implement suspend/reactivate
+- [x] Implement role assignment
+- [x] Implement session revocation
 - [x] Create `/settings/users` page
-- [ ] Add search, status filter, and role filter *(search and status are implemented; role filter still remains)*
-- [ ] Add user action dialogs
+- [x] Add search, status filter, and role filter
+- [x] Add user action dialogs
 - [ ] Add user administration tests
 
 ## Phase 4: Roles and Permissions
 
-- [ ] Implement role CRUD API
-- [ ] Implement permission assignment API
+- [x] Implement role list API (GET /roles, GET /roles/:id)
+- [x] Implement permission list API (GET /permissions)
+- [x] Implement role create/update/delete API
+- [x] Implement permission assignment API
 - [ ] Enforce built-in role protections
-- [ ] Create `/settings/roles` page
-- [ ] Create permission matrix editor
-- [ ] Add permission-aware navigation
+- [x] Create `/settings/roles` page
+- [x] Create permission matrix editor
+- [x] Add permission-aware navigation
 - [ ] Add role and permission tests
 
 ## Phase 5: Invitations and Recovery
@@ -140,8 +142,8 @@ Only mark work complete after its relevant validation passes.
 
 ## Current Step
 
-Run the manual Phase 2 browser journey, then manually review /settings/users with the provisioned Owner.
+Complete Phase 4: role create/update/delete API, permission assignment, /settings/roles page, permission matrix editor, and permission-aware navigation.
 
 ## Next Step
 
-Continue Phase 3 with user detail, user update, role filter data, and safe action dialogs.
+Phase 5: invitations, password recovery, and email delivery.

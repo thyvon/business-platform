@@ -5,6 +5,7 @@ import { AppError } from "../errors/app-error.js";
 
 export const requestContext: RequestHandler = (request, response, next) => {
   const requestId = request.header("x-request-id") || randomUUID();
+  request.id = requestId;
   response.locals.requestId = requestId;
   response.setHeader("x-request-id", requestId);
   next();

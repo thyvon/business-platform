@@ -5,9 +5,18 @@ import type { CurrentSession } from "@business/contracts";
 import { LoaderCircle, LogOut, Moon, PanelLeft, Settings, Sun } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { apiRequest, ApiClientError } from "@/lib/api-client";
 import { useTheme } from "@/lib/theme-context";
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("");
+}
 
 export function Navbar({
   currentSession,
@@ -62,13 +71,15 @@ export function Navbar({
             {logoutError}
           </span>
         )}
-        <button type="button" onClick={() => router.push("/profile" as Route)} className="hidden min-w-0 text-right sm:block cursor-pointer">
-          <p className="truncate text-sm font-semibold text-foreground hover:text-primary transition-colors">
-            {currentSession.user.displayName}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {currentSession.organization.name}
-          </p>
+        <button type="button" onClick={() => router.push("/profile" as Route)} className="hidden min-w-0 items-center gap-2.5 sm:flex cursor-pointer">
+          <Avatar size="sm">
+            <AvatarFallback>{getInitials(currentSession.user.displayName)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 text-right">
+            <p className="truncate text-sm font-semibold text-foreground hover:text-primary transition-colors">
+              {currentSession.user.displayName}
+            </p>
+          </div>
         </button>
         <Button
           variant="ghost"
