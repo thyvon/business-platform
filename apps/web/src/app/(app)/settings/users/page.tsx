@@ -3,17 +3,17 @@ import type { Metadata } from "next";
 import type { Route } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { UserRoundPlus, UsersRound } from "lucide-react";
+import { UsersRound } from "lucide-react";
 import Link from "next/link";
 import { userListQuerySchema, userListResponseSchema, type UserListItem, type UserListQuery, type UserListResponse } from "@business/contracts/auth";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar, type DataTableToolbarFilter } from "@/components/ui/data-table-toolbar";
 import { buildLoginPath } from "@/lib/auth-redirect";
 import { getCurrentSession } from "@/lib/server-auth";
 import { UserActions } from "@/features/users/components/user-actions";
+import { InviteUserButton } from "@/features/users/components/invite-user-dialog";
 
 
 export const metadata: Metadata = { title: "Users" };
@@ -170,10 +170,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Search
             Review organization members and their current access.
           </p>
         </div>
-        <Button disabled title="Invitation flow is scheduled for the next user-admin slice">
-          <UserRoundPlus className="size-4" />
-          Invite user
-        </Button>
+        <InviteUserButton roleOptions={rolesData} />
       </div>
 
       <DataTableToolbar

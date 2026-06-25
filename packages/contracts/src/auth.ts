@@ -151,6 +151,12 @@ export const inviteUserSchema = z.object({
   roleIds: z.array(idSchema).min(1).max(20).refine(hasUniqueValues, "Role IDs must be unique."),
 }).strict();
 
+export const acceptInvitationSchema = z.object({
+  token: tokenSchema,
+  displayName: z.string().trim().min(1).max(255),
+  password: newPasswordSchema,
+}).strict();
+
 export const updateUserSchema = z.object({
   displayName: z.string().trim().min(1).max(255).optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, "At least one field must be supplied.");
@@ -193,6 +199,7 @@ export type UserListItem = z.infer<typeof userListItemSchema>;
 export type UserDetailResponse = z.infer<typeof userDetailResponseSchema>;
 export type UserListResponse = z.infer<typeof userListResponseSchema>;
 export type InviteUserInput = z.infer<typeof inviteUserSchema>;
+export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type AssignUserRolesInput = z.infer<typeof assignUserRolesSchema>;
 export type CreateRoleInput = z.infer<typeof createRoleSchema>;

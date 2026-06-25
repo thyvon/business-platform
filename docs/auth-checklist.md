@@ -119,9 +119,9 @@ Only mark work complete after its relevant validation passes.
 
 ## Phase 5: Invitations and Recovery
 
-- [ ] Select and configure production email delivery
-- [ ] Implement user invitations
-- [ ] Implement invitation acceptance
+- [x] Select and configure production email delivery
+- [x] Implement user invitations
+- [x] Implement invitation acceptance
 - [ ] Implement forgot-password request
 - [ ] Implement password reset
 - [ ] Revoke sessions after password reset
@@ -142,8 +142,8 @@ Only mark work complete after its relevant validation passes.
 
 ## Current Step
 
-Complete Phase 4: role create/update/delete API, permission assignment, /settings/roles page, permission matrix editor, and permission-aware navigation.
+Implement forgot-password request and password reset flow.
 
 ## Next Step
 
-Phase 5: invitations, password recovery, and email delivery.
+Phase 6: Production hardening — security review, rate limits, audit, tests.

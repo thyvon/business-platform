@@ -11,6 +11,10 @@ import { createAuthenticate } from "./modules/auth/auth.middleware.js";
 import { createCsrfProtection } from "./modules/auth/csrf.middleware.js";
 import { LoginRateLimiter } from "./modules/auth/login-rate-limiter.js";
 import { AuthenticationService, PasswordService } from "./modules/auth/auth.service.js";
+import { EmailService } from "./shared/email/email.service.js";
+import { InvitationRepository } from "./modules/invitations/invitation.repository.js";
+import { InvitationService } from "./modules/invitations/invitation.service.js";
+import { createInvitationRouter } from "./modules/invitations/invitation.routes.js";
 import { ProductRepository } from "./modules/products/product.repository.js";
 import { RolesRepository } from "./modules/roles/roles.repository.js";
 import { createRolesRouter } from "./modules/roles/roles.routes.js";
@@ -57,6 +61,10 @@ export function createApp(database: Database["db"]) {
 
   const rolesService = new RolesService(new RolesRepository(database));
   app.use("/api/v1/roles", createRolesRouter(rolesService, authenticate, csrfProtection));
+
+  const emailService = new EmailService();
+  const invitationService = new InvitationService(new InvitationRepository(database), emailService);
+  app.use("/api/v1/invitations", createInvitationRouter(invitationService, authenticate, csrfProtection));
 
   const productService = new ProductService(new ProductRepository(database));
   app.use("/api/v1/products", createProductRouter(productService));
