@@ -45,7 +45,6 @@ export function AppShell({
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
         onMobileClose={handleMobileClose}
-        permissions={currentSession.permissions}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <Navbar

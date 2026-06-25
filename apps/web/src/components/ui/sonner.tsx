@@ -18,7 +18,11 @@ function Toaster({ ...props }: ToasterProps) {
           toast:
             "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
           success:
-            "group-[.toast]:!bg-primary/10 group-[.toast]:!border-primary/30 group-[.toast]:!text-foreground [&_[data-icon]]:!text-primary",
+             "group-[.toast]:!bg-primary/10 group-[.toast]:!border-primary/30 group-[.toast]:!text-foreground [&_[data-icon]]:!text-primary",
+          error:
+             "group-[.toast]:!bg-destructive/10 group-[.toast]:!border-destructive/30 group-[.toast]:!text-foreground [&_[data-icon]]:!text-destructive",
+          warning:
+             "group-[.toast]:!bg-amber-50 group-[.toast]:!border-amber-300 group-[.toast]:!text-foreground [&_[data-icon]]:!text-amber-600 dark:group-[.toast]:!bg-amber-950/30 dark:group-[.toast]:!border-amber-700/50 dark:[&_[data-icon]]:!text-amber-400",
           description: "group-[.toast]:text-muted-foreground",
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
