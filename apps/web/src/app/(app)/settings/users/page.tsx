@@ -16,7 +16,6 @@ import { getCurrentSession } from "@/lib/server-auth";
 import { UserActions } from "@/features/users/components/user-actions";
 import { InviteUserButton } from "@/features/users/components/invite-user-dialog";
 
-
 export const metadata: Metadata = { title: "Users" };
 
 const apiOrigin = (process.env.API_INTERNAL_URL || "http://127.0.0.1:4000").replace(/\/$/, "");
@@ -30,6 +29,12 @@ type SearchParams = Promise<{
   sort?: string | string[];
   direction?: string | string[];
 }>;
+
+type UserActionPermissions = {
+  canUpdate: boolean;
+  canSuspend: boolean;
+  canAssignRoles: boolean;
+};
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -121,8 +126,14 @@ export default async function UsersPage({ searchParams }: { searchParams: Search
 
   const rolesPayload = await rolesResponse.json() as { data: Array<{ id: string; name: string }> };
   const rolesData = rolesPayload.data;
+  const roleOptions = rolesData.map((role) => ({ value: role.id, label: role.name }));
 
-  const roleOptions = rolesData.map((r) => ({ value: r.id, label: r.name }));
+  const userActionPermissions: UserActionPermissions = {
+    canUpdate: session.permissions.includes("users.update"),
+    canSuspend: session.permissions.includes("users.suspend"),
+    canAssignRoles: session.permissions.includes("users.roles.assign"),
+  };
+  const canInviteUsers = session.permissions.includes("users.invite");
 
   const userFilters: DataTableToolbarFilter[] = [
     {
@@ -177,36 +188,46 @@ export default async function UsersPage({ searchParams }: { searchParams: Search
         </BreadcrumbList>
       </Breadcrumb>
       <section className="mt-4 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-            <UsersRound className="size-6" />
-            Users
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review organization members and their current access.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+              <UsersRound className="size-6" />
+              Users
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review organization members and their current access.
+            </p>
+          </div>
+          {canInviteUsers ? <InviteUserButton roleOptions={rolesData} /> : null}
         </div>
-        <InviteUserButton roleOptions={rolesData} />
-      </div>
 
-      <div className="space-y-2">
-        <DataTableToolbar searchPlaceholder="Name or email" filters={userFilters}>
-          <DataTablePageSizeControl pagination={pageSizePagination} />
-        </DataTableToolbar>
+        <div className="space-y-2">
+          <DataTableToolbar searchPlaceholder="Name or email" filters={userFilters}>
+            <DataTablePageSizeControl pagination={pageSizePagination} />
+          </DataTableToolbar>
 
-        <Suspense key={usersTableKey(query)} fallback={<UsersTableLoading roleOptions={rolesData} />}>
-          <UsersTable query={query} roleOptions={rolesData} />
-        </Suspense>
-      </div>
-    </section>
+          <Suspense key={usersTableKey(query)} fallback={<UsersTableLoading roleOptions={rolesData} userActionPermissions={userActionPermissions} currentUserId={session.user.id} />}>
+            <UsersTable query={query} roleOptions={rolesData} userActionPermissions={userActionPermissions} currentUserId={session.user.id} />
+          </Suspense>
+        </div>
+      </section>
     </>
   );
 }
 
-async function UsersTable({ query, roleOptions }: { query: UserListQuery; roleOptions: Array<{ id: string; name: string }> }) {
+async function UsersTable({
+  query,
+  roleOptions,
+  userActionPermissions,
+  currentUserId,
+}: {
+  query: UserListQuery;
+  roleOptions: Array<{ id: string; name: string }>;
+  userActionPermissions: UserActionPermissions;
+  currentUserId: string;
+}) {
   const users = await fetchUsers(query);
-  const columns = createUserColumns(roleOptions);
+  const columns = createUserColumns(roleOptions, userActionPermissions, currentUserId);
 
   return (
     <DataTable
@@ -234,10 +255,18 @@ async function UsersTable({ query, roleOptions }: { query: UserListQuery; roleOp
   );
 }
 
-function UsersTableLoading({ roleOptions }: { roleOptions: Array<{ id: string; name: string }> }) {
+function UsersTableLoading({
+  roleOptions,
+  userActionPermissions,
+  currentUserId,
+}: {
+  roleOptions: Array<{ id: string; name: string }>;
+  userActionPermissions: UserActionPermissions;
+  currentUserId: string;
+}) {
   return (
     <DataTable<UserListItem>
-      columns={createUserColumns(roleOptions)}
+      columns={createUserColumns(roleOptions, userActionPermissions, currentUserId)}
       items={[]}
       getItemKey={(user) => user.id}
       emptyTitle="No users found"
@@ -250,6 +279,8 @@ function UsersTableLoading({ roleOptions }: { roleOptions: Array<{ id: string; n
 
 function createUserColumns(
   roleOptions: Array<{ id: string; name: string }>,
+  userActionPermissions: UserActionPermissions,
+  currentUserId: string,
 ): Array<DataTableColumn<UserListItem>> {
   return [
     {
@@ -288,8 +319,11 @@ function createUserColumns(
           userId={user.id}
           displayName={user.displayName}
           membershipStatus={user.membershipStatus}
-          roleIds={user.roles.map((r) => r.id)}
+          roleIds={user.roles.map((role) => role.id)}
           roleOptions={roleOptions}
+          canUpdate={userActionPermissions.canUpdate}
+          canSuspend={userActionPermissions.canSuspend && user.id !== currentUserId}
+          canAssignRoles={userActionPermissions.canAssignRoles}
         />
       ),
     },
@@ -325,5 +359,3 @@ function UserRoles({ user }: { user: UserListItem }) {
     </div>
   );
 }
-
-

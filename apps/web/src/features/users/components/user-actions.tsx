@@ -22,12 +22,18 @@ export function UserActions({
   membershipStatus,
   roleIds: initialRoleIds,
   roleOptions,
+  canUpdate,
+  canSuspend,
+  canAssignRoles,
 }: {
   userId: string;
   displayName: string;
   membershipStatus: string;
   roleIds: string[];
   roleOptions: RoleOption[];
+  canUpdate: boolean;
+  canSuspend: boolean;
+  canAssignRoles: boolean;
 }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
@@ -37,6 +43,9 @@ export function UserActions({
   const [revokeOpen, setRevokeOpen] = useState(false);
 
   const onSuccess = useCallback(() => { router.refresh(); }, [router]);
+  const hasActions = canUpdate || canSuspend || canAssignRoles;
+
+  if (!hasActions) return null;
 
   return (
     <>
@@ -45,79 +54,94 @@ export function UserActions({
           <Ellipsis className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => setEditOpen(true)}>
-            <Pencil className="size-3.5" />
-            Edit
-          </DropdownMenuItem>
-          {membershipStatus === "active" ? (
-            <DropdownMenuItem onClick={() => setSuspendOpen(true)}>
-              <ShieldOff className="size-3.5 text-destructive" />
-              Suspend
+          {canUpdate ? (
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>
+              <Pencil className="size-3.5" />
+              Edit
             </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem onClick={() => setReactivateOpen(true)}>
-              <Shield className="size-3.5 text-green-600" />
-              Reactivate
+          ) : null}
+          {canSuspend ? (
+            membershipStatus === "active" ? (
+              <DropdownMenuItem onClick={() => setSuspendOpen(true)}>
+                <ShieldOff className="size-3.5 text-destructive" />
+                Suspend
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => setReactivateOpen(true)}>
+                <Shield className="size-3.5 text-green-600" />
+                Reactivate
+              </DropdownMenuItem>
+            )
+          ) : null}
+          {canAssignRoles ? (
+            <DropdownMenuItem onClick={() => setRolesOpen(true)}>
+              <Shield className="size-3.5" />
+              Roles
             </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onClick={() => setRolesOpen(true)}>
-            <Shield className="size-3.5" />
-            Roles
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setRevokeOpen(true)}>
-            <LogOut className="size-3.5" />
-            Revoke sessions
-          </DropdownMenuItem>
+          ) : null}
+          {canUpdate ? (
+            <DropdownMenuItem onClick={() => setRevokeOpen(true)}>
+              <LogOut className="size-3.5" />
+              Revoke sessions
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditUserDialog
-        userId={userId}
-        displayName={displayName}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSuccess={onSuccess}
-      />
-
-      {membershipStatus === "active" ? (
-        <SuspendUserDialog
+      {canUpdate ? (
+        <EditUserDialog
           userId={userId}
           displayName={displayName}
-          open={suspendOpen}
-          onOpenChange={setSuspendOpen}
+          open={editOpen}
+          onOpenChange={setEditOpen}
           onSuccess={onSuccess}
         />
-      ) : (
-        <ReactivateUserDialog
+      ) : null}
+
+      {canSuspend ? (
+        membershipStatus === "active" ? (
+          <SuspendUserDialog
+            userId={userId}
+            displayName={displayName}
+            open={suspendOpen}
+            onOpenChange={setSuspendOpen}
+            onSuccess={onSuccess}
+          />
+        ) : (
+          <ReactivateUserDialog
+            userId={userId}
+            displayName={displayName}
+            open={reactivateOpen}
+            onOpenChange={setReactivateOpen}
+            onSuccess={onSuccess}
+          />
+        )
+      ) : null}
+
+      {canAssignRoles ? (
+        <AssignRolesDialog
           userId={userId}
           displayName={displayName}
-          open={reactivateOpen}
-          onOpenChange={setReactivateOpen}
+          roleIds={initialRoleIds}
+          roleOptions={roleOptions}
+          open={rolesOpen}
+          onOpenChange={setRolesOpen}
           onSuccess={onSuccess}
         />
-      )}
+      ) : null}
 
-      <AssignRolesDialog
-        userId={userId}
-        displayName={displayName}
-        roleIds={initialRoleIds}
-        roleOptions={roleOptions}
-        open={rolesOpen}
-        onOpenChange={setRolesOpen}
-        onSuccess={onSuccess}
-      />
-
-      <RevokeSessionsDialog
-        userId={userId}
-        displayName={displayName}
-        open={revokeOpen}
-        onOpenChange={setRevokeOpen}
-        onSuccess={onSuccess}
-      />
+      {canUpdate ? (
+        <RevokeSessionsDialog
+          userId={userId}
+          displayName={displayName}
+          open={revokeOpen}
+          onOpenChange={setRevokeOpen}
+          onSuccess={onSuccess}
+        />
+      ) : null}
     </>
   );
 }
-
 function EditUserDialog({
   userId,
   displayName,
@@ -387,6 +411,10 @@ function RevokeSessionsDialog({
     </Dialog>
   );
 }
+
+
+
+
 
 
 
