@@ -94,7 +94,7 @@ export function MultiCombobox({
         {hiddenInputs}
         <ComboboxPrimitive.Chips
           className={cn(
-            "flex min-h-8 w-full min-w-0 flex-nowrap items-center gap-1 overflow-x-hidden rounded-xl border border-input bg-background/70 px-2 py-1 shadow-sm backdrop-blur-xl font-sans text-sm font-normal leading-5 text-foreground outline-none transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-input/50 data-[disabled]:opacity-50 dark:bg-input/30 dark:data-[disabled]:bg-input/80",
+            "flex min-h-8 w-full min-w-0 flex-nowrap items-center gap-1 overflow-x-hidden rounded-xl bg-background/70 px-2 py-1 shadow-sm backdrop-blur-xl font-sans text-sm font-normal leading-5 text-foreground outline-none transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-input/50 data-[disabled]:opacity-50 dark:bg-input/30 dark:data-[disabled]:bg-input/80",
             inputClassName,
           )}
         >
@@ -144,7 +144,7 @@ export function MultiCombobox({
           <ComboboxPrimitive.Positioner sideOffset={4} align="start" className="z-50">
             <ComboboxPrimitive.Popup
               className={cn(
-                "group max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl border border-white/50 bg-popover/90 p-1 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:border-white/15 dark:bg-popover/92",
+                "group max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl border border-white/30 bg-popover/90 p-1 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:border-white/10 dark:bg-popover/92",
                 popupClassName,
               )}
             >
@@ -250,7 +250,7 @@ export function Combobox({
             aria-labelledby={ariaLabelledBy}
             placeholder={placeholder}
             className={cn(
-              "h-8 w-full min-w-0 rounded-xl border border-input bg-background/70 py-1 pl-2.5 pr-8 shadow-sm backdrop-blur-xl font-sans text-sm font-normal leading-5 text-foreground outline-none transition-colors placeholder:font-normal placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:bg-input/30 dark:disabled:bg-input/80",
+              "h-8 w-full min-w-0 rounded-xl bg-background/70 py-1 pl-2.5 pr-8 shadow-sm backdrop-blur-xl font-sans text-sm font-normal leading-5 text-foreground outline-none transition-colors placeholder:font-normal placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:bg-input/30 dark:disabled:bg-input/80",
               inputClassName,
             )}
           />
@@ -269,7 +269,7 @@ export function Combobox({
           <ComboboxPrimitive.Positioner sideOffset={4} align="start" className="z-50">
             <ComboboxPrimitive.Popup
               className={cn(
-                "group max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl border border-white/50 bg-popover/90 p-1 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:border-white/15 dark:bg-popover/92",
+                "group max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl border border-white/30 bg-popover/90 p-1 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:border-white/10 dark:bg-popover/92",
                 popupClassName,
               )}
             >

@@ -73,7 +73,7 @@ export function DataTableToolbar({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/50 bg-white/55 p-2 shadow-sm backdrop-blur-xl dark:border-white/15 dark:bg-white/[0.08]",
+        "rounded-2xl bg-white/55 p-2 shadow-sm backdrop-blur-xl transition-all duration-300 hover:shadow-xl hover:shadow-primary/25 hover:ring-2 hover:ring-primary/30 dark:bg-white/[0.08]",
         className,
       )}
     >

@@ -6,6 +6,11 @@ interface AttemptWindow {
   resetsAt: number;
 }
 
+interface RequestWindow {
+  count: number;
+  resetsAt: number;
+}
+
 class FixedWindowFailures {
   private readonly attempts = new Map<string, AttemptWindow>();
 
@@ -54,6 +59,45 @@ class FixedWindowFailures {
   }
 }
 
+class FixedWindowRequests {
+  private readonly requests = new Map<string, RequestWindow>();
+
+  constructor(
+    private readonly limit: number,
+    private readonly windowMs: number,
+    private readonly maximumEntries: number,
+  ) {}
+
+  consume(key: string, now: Date): number | null {
+    const timestamp = now.getTime();
+    const current = this.requests.get(key);
+
+    if (!current || current.resetsAt <= timestamp) {
+      this.makeRoom(timestamp);
+      this.requests.set(key, { count: 1, resetsAt: timestamp + this.windowMs });
+      return null;
+    }
+
+    if (current.count >= this.limit) {
+      return Math.max(1, Math.ceil((current.resetsAt - timestamp) / 1_000));
+    }
+
+    current.count += 1;
+    return null;
+  }
+
+  private makeRoom(now: number): void {
+    if (this.requests.size < this.maximumEntries) return;
+    for (const [key, entry] of this.requests) {
+      if (entry.resetsAt <= now) this.requests.delete(key);
+    }
+    if (this.requests.size >= this.maximumEntries) {
+      const oldestKey = this.requests.keys().next().value;
+      if (oldestKey) this.requests.delete(oldestKey);
+    }
+  }
+}
+
 export class LoginRateLimiter {
   private readonly network = new FixedWindowFailures(30, 15 * 60_000, 10_000);
   private readonly networkAndAccount = new FixedWindowFailures(5, 15 * 60_000, 20_000);
@@ -88,7 +132,54 @@ export class LoginRateLimiter {
 
   private keys(ipAddress: string, email: string) {
     const network = ipAddress || "unknown";
-    const accountHash = createHash("sha256").update(email, "utf8").digest("hex");
+    const accountHash = hashValue(email);
     return { network, pair: network + ":" + accountHash };
   }
+}
+
+export class RecoveryRateLimiter {
+  private readonly forgotPasswordNetwork = new FixedWindowRequests(20, 15 * 60_000, 10_000);
+  private readonly forgotPasswordAccount = new FixedWindowRequests(3, 60 * 60_000, 20_000);
+  private readonly resetPasswordNetwork = new FixedWindowRequests(30, 15 * 60_000, 10_000);
+  private readonly resetPasswordToken = new FixedWindowRequests(8, 15 * 60_000, 20_000);
+
+  consumeForgotPassword(ipAddress: string, email: string, now = new Date()): void {
+    const networkKey = ipAddress || "unknown";
+    const accountKey = hashValue(email);
+    const retryAfter = Math.max(
+      this.forgotPasswordNetwork.consume(networkKey, now) ?? 0,
+      this.forgotPasswordAccount.consume(accountKey, now) ?? 0,
+    );
+
+    if (retryAfter > 0) {
+      throw new AppError(
+        429,
+        "PASSWORD_RECOVERY_RATE_LIMITED",
+        "Too many password recovery requests. Please try again later.",
+        { retryAfterSeconds: retryAfter },
+      );
+    }
+  }
+
+  consumeResetPassword(ipAddress: string, token: string, now = new Date()): void {
+    const networkKey = ipAddress || "unknown";
+    const tokenKey = hashValue(token);
+    const retryAfter = Math.max(
+      this.resetPasswordNetwork.consume(networkKey, now) ?? 0,
+      this.resetPasswordToken.consume(tokenKey, now) ?? 0,
+    );
+
+    if (retryAfter > 0) {
+      throw new AppError(
+        429,
+        "PASSWORD_RECOVERY_RATE_LIMITED",
+        "Too many password recovery requests. Please try again later.",
+        { retryAfterSeconds: retryAfter },
+      );
+    }
+  }
+}
+
+function hashValue(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
 }

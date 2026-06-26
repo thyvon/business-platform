@@ -2,7 +2,7 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { describe, expect, it } from "vitest";
 import { clearSessionCookie, createSessionCookie } from "./auth.cookie.js";
 import { createCsrfProtection } from "./csrf.middleware.js";
-import { LoginRateLimiter } from "./login-rate-limiter.js";
+import { LoginRateLimiter, RecoveryRateLimiter } from "./login-rate-limiter.js";
 
 function request(method: string, headers: Record<string, string> = {}): Request {
   return {
@@ -91,5 +91,31 @@ describe("login rate limiting", () => {
     limiter.recordSuccess("127.0.0.1", "owner@example.com");
 
     expect(() => limiter.assertAllowed("127.0.0.1", "owner@example.com", now)).not.toThrow();
+  });
+});
+describe("password recovery rate limiting", () => {
+  it("blocks repeated forgot-password requests for one account", () => {
+    const limiter = new RecoveryRateLimiter();
+    const now = new Date("2030-01-01T00:00:00.000Z");
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      limiter.consumeForgotPassword("127.0.0.1", "owner@example.com", now);
+    }
+
+    expect(() => limiter.consumeForgotPassword("127.0.0.2", "owner@example.com", now))
+      .toThrow(expect.objectContaining({ statusCode: 429, code: "PASSWORD_RECOVERY_RATE_LIMITED" }));
+  });
+
+  it("blocks repeated reset-password attempts for one token", () => {
+    const limiter = new RecoveryRateLimiter();
+    const now = new Date("2030-01-01T00:00:00.000Z");
+    const token = "a-secure-password-reset-token-with-enough-entropy";
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      limiter.consumeResetPassword("127.0.0.1", token, now);
+    }
+
+    expect(() => limiter.consumeResetPassword("127.0.0.2", token, now))
+      .toThrow(expect.objectContaining({ statusCode: 429, code: "PASSWORD_RECOVERY_RATE_LIMITED" }));
   });
 });

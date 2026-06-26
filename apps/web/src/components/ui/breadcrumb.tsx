@@ -29,7 +29,7 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
 function BreadcrumbLink({ className, ...props }: React.ComponentProps<"a">) {
   return (
     <a
-      className={cn("transition-colors hover:text-foreground", className)}
+      className={cn("transition-all duration-300 hover:text-foreground", className)}
       {...props}
     />
   )

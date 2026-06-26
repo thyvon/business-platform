@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { errorHandler, requestContext } from "../../shared/http/middleware.js";
 import { createAuthRouter } from "./auth.routes.js";
 import { createCsrfProtection } from "./csrf.middleware.js";
-import { LoginRateLimiter } from "./login-rate-limiter.js";
+import { LoginRateLimiter, RecoveryRateLimiter } from "./login-rate-limiter.js";
 import type { AuthRepository } from "./auth.repository.js";
 import type { AuthenticationService, LoginService } from "./auth.service.js";
 import type { AuthenticatedPrincipal } from "./auth.types.js";
@@ -32,6 +32,8 @@ describe("authentication routes", () => {
       principal,
     });
     const logout = vi.fn<LoginService["logout"]>().mockResolvedValue(undefined);
+    const requestPasswordReset = vi.fn().mockResolvedValue(undefined);
+    const resetPassword = vi.fn().mockResolvedValue(undefined);
 
     const updateUserProfile = vi.fn<AuthRepository["updateUserProfile"]>();
 
@@ -40,9 +42,10 @@ describe("authentication routes", () => {
     app.use(express.json());
     app.use("/auth", createAuthRouter({
       authenticator: { authenticate },
-      loginSessions: { login, changePassword, logout },
+      loginSessions: { login, changePassword, requestPasswordReset, resetPassword, logout },
       csrfProtection: createCsrfProtection("https://app.example.com"),
       loginRateLimiter: new LoginRateLimiter(),
+      recoveryRateLimiter: new RecoveryRateLimiter(),
       secureCookies: true,
       authRepository: { updateUserProfile } as unknown as AuthRepository,
     }));
@@ -115,6 +118,8 @@ describe("authentication routes", () => {
     const login = vi.fn<LoginService["login"]>();
     const changePassword = vi.fn();
     const logout = vi.fn<LoginService["logout"]>();
+    const requestPasswordReset = vi.fn().mockResolvedValue(undefined);
+    const resetPassword = vi.fn().mockResolvedValue(undefined);
 
     const updateUserProfile = vi.fn<AuthRepository["updateUserProfile"]>();
 
@@ -123,9 +128,10 @@ describe("authentication routes", () => {
     app.use(express.json());
     app.use("/auth", createAuthRouter({
       authenticator: { authenticate },
-      loginSessions: { login, changePassword, logout },
+      loginSessions: { login, changePassword, requestPasswordReset, resetPassword, logout },
       csrfProtection: createCsrfProtection("https://app.example.com"),
       loginRateLimiter: new LoginRateLimiter(),
+      recoveryRateLimiter: new RecoveryRateLimiter(),
       secureCookies: true,
       authRepository: { updateUserProfile } as unknown as AuthRepository,
     }));
@@ -157,3 +163,5 @@ describe("authentication routes", () => {
     }
   });
 });
+
+

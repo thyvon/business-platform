@@ -103,7 +103,10 @@ Only mark work complete after its relevant validation passes.
 - [x] Create `/settings/users` page
 - [x] Add search, status filter, and role filter
 - [x] Add user action dialogs
-- [ ] Add user administration tests
+- [x] Hide unavailable user actions based on permissions
+- [x] Stabilize shared users table toolbar, filters, loading, and pagination
+- [x] Pass automated QA for user administration flow
+- [ ] Add browser QA for user administration flow
 
 ## Phase 4: Roles and Permissions
 
@@ -122,17 +125,17 @@ Only mark work complete after its relevant validation passes.
 - [x] Select and configure production email delivery
 - [x] Implement user invitations
 - [x] Implement invitation acceptance
-- [ ] Implement forgot-password request
-- [ ] Implement password reset
-- [ ] Revoke sessions after password reset
-- [ ] Add invitation and recovery tests
+- [x] Implement forgot-password request
+- [x] Implement password reset
+- [x] Revoke sessions after password reset
+- [x] Add invitation and recovery tests
 
 ## Phase 6: Production Hardening
 
 - [ ] Resolve or formally assess the current moderate Next.js transitive PostCSS advisory
 - [ ] Review HTTPS and cookie configuration
 - [ ] Review CORS and CSRF configuration
-- [ ] Review rate limits
+- [x] Review rate limits
 - [ ] Review audit event coverage
 - [ ] Add expired-record cleanup job
 - [ ] Run dependency and security review
@@ -142,8 +145,10 @@ Only mark work complete after its relevant validation passes.
 
 ## Current Step
 
-Implement forgot-password request and password reset flow.
+Forgot-password and reset-password recovery flow is implemented and verified with automated QA. Browser QA is intentionally deferred.
 
 ## Next Step
 
-Phase 6: Production hardening — security review, rate limits, audit, tests.
+Phase 6: Production hardening - audit coverage review, HTTPS/cookie review, dependency security review, and browser QA.
+
+

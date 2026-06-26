@@ -369,6 +369,44 @@ Responsive data must preserve important values, expose keyboard-accessible sorti
 
 Charts need a text summary or accessible data alternative. Color alone must not communicate values.
 
+
+## Implemented DataTable Pattern
+
+The current reusable listing pattern is built from these shared components:
+
+- `DataTable` at `apps/web/src/components/ui/data-table.tsx`
+- `DataTableToolbar` at `apps/web/src/components/ui/data-table-toolbar.tsx`
+- `DataTablePageSizeControl` and `DataTablePaginationBar` at `apps/web/src/components/ui/data-table-pagination-bar.tsx`
+- `Select`, `Combobox`, and `MultiCombobox` for filters and role selection
+
+Use this pattern for server-backed list pages:
+
+1. Keep search always visible in the toolbar.
+2. Keep filters inside the expandable filter pane.
+3. Keep rows-per-page inside the same toolbar card.
+4. Store search, filters, page, page size, sort, and direction in the URL.
+5. Reset `page` to `1` when search, filters, or page size change.
+6. Preserve the table header during loading and empty states.
+7. Show the table body preloader during search, filter, pagination, and reload actions.
+8. Keep the toolbar outside the keyed `Suspense` boundary so the search input does not lose focus while typing.
+9. Hide unavailable business actions in the UI based on permissions, while keeping the API as the final security boundary.
+
+The filter pane is visually part of one toolbar card. Do not render filters as a separate floating card unless the page has a specific layout reason.
+
+### Users Page Reference
+
+`/settings/users` is the reference implementation for this pattern. It includes:
+
+- Real-time debounced search
+- Status filter using shared `Select`
+- Role filter using shared `Combobox`
+- Rows-per-page in the toolbar
+- Server-side pagination
+- Loading preloader in the table body
+- Permission-gated invite and row actions
+
+When building Product, Supplier, or future admin tables, start from this pattern instead of creating a separate toolbar or filter layout.
+
 ## Avoid Duplicate Components
 
 - Use `Toast` rather than duplicating it as `Snackbar`.

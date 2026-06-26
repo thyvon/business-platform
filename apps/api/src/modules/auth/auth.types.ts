@@ -27,6 +27,22 @@ export interface LoginAccount {
   membershipId: string;
 }
 
+export interface PasswordResetAccount {
+  userId: string;
+  email: string;
+  displayName: string;
+  organizationId: string;
+  organizationName: string;
+}
+
+export interface PasswordResetRecord {
+  id: string;
+  userId: string;
+  email: string;
+  displayName: string;
+  organizationId: string;
+}
+
 export interface NewSession {
   id: string;
   userId: string;
@@ -35,6 +51,16 @@ export interface NewSession {
   expiresAt: Date;
   ipAddress: string | null;
   userAgent: string | null;
+  requestId: string;
+  createdAt: Date;
+}
+
+export interface NewPasswordResetToken {
+  id: string;
+  userId: string;
+  organizationId: string;
+  tokenHash: string;
+  expiresAt: Date;
   requestId: string;
   createdAt: Date;
 }
@@ -58,4 +84,18 @@ export interface PasswordChangeStore extends LoginSessionStore {
     changedAt: Date,
   ): Promise<void>;
   deleteExpiredSessions(now: Date): Promise<void>;
+}
+
+export interface PasswordResetStore extends PasswordChangeStore {
+  findPasswordResetAccountByEmail(email: string): Promise<PasswordResetAccount | null>;
+  createPasswordResetToken(token: NewPasswordResetToken): Promise<void>;
+  findPasswordResetByTokenHash(tokenHash: string, now: Date): Promise<PasswordResetRecord | null>;
+  resetPasswordAndRevokeSessions(params: {
+    tokenId: string;
+    userId: string;
+    organizationId: string;
+    passwordHash: string;
+    requestId: string;
+    resetAt: Date;
+  }): Promise<void>;
 }

@@ -9,7 +9,7 @@ import { AuthRepository } from "./modules/auth/auth.repository.js";
 import { createAuthRouter } from "./modules/auth/auth.routes.js";
 import { createAuthenticate } from "./modules/auth/auth.middleware.js";
 import { createCsrfProtection } from "./modules/auth/csrf.middleware.js";
-import { LoginRateLimiter } from "./modules/auth/login-rate-limiter.js";
+import { LoginRateLimiter, RecoveryRateLimiter } from "./modules/auth/login-rate-limiter.js";
 import { AuthenticationService, PasswordService } from "./modules/auth/auth.service.js";
 import { EmailService } from "./shared/email/email.service.js";
 import { InvitationRepository } from "./modules/invitations/invitation.repository.js";
@@ -43,7 +43,8 @@ export function createApp(database: Database["db"]) {
   const authRepository = new AuthRepository(database);
   const authenticator = new AuthenticationService(authRepository);
   const authenticate = createAuthenticate(authenticator);
-  const authSessions = new PasswordService(authRepository, env.sessionTtlMs);
+  const emailService = new EmailService();
+  const authSessions = new PasswordService(authRepository, env.sessionTtlMs, emailService);
   const csrfProtection = createCsrfProtection(env.webOrigin);
   void authRepository.deleteExpiredSessions(new Date()).catch(() => undefined);
 
@@ -52,6 +53,7 @@ export function createApp(database: Database["db"]) {
     loginSessions: authSessions,
     csrfProtection,
     loginRateLimiter: new LoginRateLimiter(),
+    recoveryRateLimiter: new RecoveryRateLimiter(),
     secureCookies: env.isProduction,
     authRepository,
   }));
@@ -62,7 +64,6 @@ export function createApp(database: Database["db"]) {
   const rolesService = new RolesService(new RolesRepository(database));
   app.use("/api/v1/roles", createRolesRouter(rolesService, authenticate, csrfProtection));
 
-  const emailService = new EmailService();
   const invitationService = new InvitationService(new InvitationRepository(database), emailService);
   app.use("/api/v1/invitations", createInvitationRouter(invitationService, authenticate, csrfProtection));
 
@@ -73,5 +74,8 @@ export function createApp(database: Database["db"]) {
   app.use(errorHandler);
   return app;
 }
+
+
+
 
 

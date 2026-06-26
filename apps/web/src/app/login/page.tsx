@@ -25,7 +25,15 @@ export default async function LoginPage({
         <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary/60" />
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
           <div />
-          <div>
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Welcome back
+              </h1>
+              <p className="mt-3 text-base text-white/70">
+                Sign in with the account provided by your organization.
+              </p>
+            </div>
             <blockquote className="space-y-2">
               <p className="text-lg leading-relaxed">
                 &ldquo;A clean foundation for the business you are building.&rdquo;
@@ -37,7 +45,7 @@ export default async function LoginPage({
           </div>
         </div>
       </div>
-      <div className="flex flex-1 items-center justify-center px-4 py-10">
+      <div className="flex min-h-dvh flex-1 items-center justify-center px-4 sm:py-10">
         <div className="w-full max-w-md">
           <div className="mb-8">
             <Image
@@ -48,12 +56,7 @@ export default async function LoginPage({
               priority
               className="mx-auto h-14 w-auto"
             />
-            <h1 className="mt-6 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Welcome back
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Sign in with the account provided by your organization.
-            </p>
+
           </div>
           <LoginForm
             returnPath={returnPath}

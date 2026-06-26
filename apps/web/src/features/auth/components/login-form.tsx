@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle, LogIn } from "@/components/ui/icons";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
@@ -52,7 +53,7 @@ export function LoginForm({
   }
 
   return (
-    <Card className="shadow-xl ring-0">
+    <Card className="ring-0">
       <form onSubmit={handleSubmit}>
       <CardContent className="p-8 sm:p-10">
       {notice && !errorMessage && (
@@ -88,7 +89,12 @@ export function LoginForm({
       </div>
 
       <div className="mt-7">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="password">Password</Label>
+          <Link href={"/forgot-password" as Route} className="text-sm font-medium text-primary hover:underline">
+            Forgot password?
+          </Link>
+        </div>
         <div className="relative mt-2.5">
           <Input
             id="password"
@@ -120,7 +126,7 @@ export function LoginForm({
         {submitting ? (
           <>
             <LoaderCircle className="size-4 animate-spin" />
-            Signing inâ€¦
+            Signing in...
           </>
         ) : (
           <>
@@ -134,3 +140,6 @@ export function LoginForm({
     </Card>
   );
 }
+
+
+

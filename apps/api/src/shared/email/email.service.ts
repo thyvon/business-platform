@@ -40,6 +40,30 @@ export class EmailService {
     await this.send({ email: params.email, subject, text });
   }
 
+  async sendPasswordReset(params: {
+    email: string;
+    displayName: string;
+    organizationName: string;
+    resetLink: string;
+    expiresInMinutes: number;
+  }): Promise<void> {
+    const subject = `Reset your ${params.organizationName} password`;
+    const text = [
+      `Hello ${params.displayName},`,
+      ``,
+      `We received a request to reset your Business Platform password for ${params.organizationName}.`,
+      ``,
+      `Click the following link to choose a new password:`,
+      params.resetLink,
+      ``,
+      `This link will expire in ${params.expiresInMinutes} minutes and can only be used once.`,
+      ``,
+      `If you did not request this reset, you can safely ignore this email.`,
+    ].join("\n");
+
+    await this.send({ email: params.email, subject, text });
+  }
+
   private async send(params: { email: string; subject: string; text: string }): Promise<void> {
     const info: unknown = await this.transporter.sendMail({
       from: env.smtp.from,
@@ -63,5 +87,3 @@ export class EmailService {
     }
   }
 }
-
-

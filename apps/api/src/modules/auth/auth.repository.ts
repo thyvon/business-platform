@@ -7,6 +7,7 @@ import {
   membershipRoles,
   organizationMemberships,
   organizations,
+  passwordResetTokens,
   permissions,
   rolePermissions,
   roles,
@@ -18,11 +19,14 @@ import type {
   AuthenticatedPrincipal,
   AuthenticatedRole,
   LoginAccount,
-  LoginSessionStore,
+  NewPasswordResetToken,
   NewSession,
+  PasswordResetAccount,
+  PasswordResetRecord,
+  PasswordResetStore,
 } from "./auth.types.js";
 
-export class AuthRepository implements LoginSessionStore {
+export class AuthRepository implements PasswordResetStore {
   constructor(private readonly database: Database["db"]) {}
 
   async findLoginAccountByEmail(email: string): Promise<LoginAccount | null> {
@@ -162,11 +166,144 @@ export class AuthRepository implements LoginSessionStore {
     });
   }
 
+  async findPasswordResetAccountByEmail(email: string): Promise<PasswordResetAccount | null> {
+    const rows = await this.database
+      .select({
+        userId: users.id,
+        email: users.email,
+        displayName: users.displayName,
+        organizationId: organizations.id,
+        organizationName: organizations.name,
+      })
+      .from(users)
+      .innerJoin(
+        organizationMemberships,
+        and(
+          eq(organizationMemberships.userId, users.id),
+          eq(organizationMemberships.status, "active"),
+        ),
+      )
+      .innerJoin(
+        organizations,
+        and(
+          eq(organizations.id, organizationMemberships.organizationId),
+          eq(organizations.status, "active"),
+        ),
+      )
+      .where(and(eq(users.email, email), eq(users.status, "active")))
+      .orderBy(asc(organizationMemberships.createdAt))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  async createPasswordResetToken(token: NewPasswordResetToken): Promise<void> {
+    await this.database.transaction(async (transaction) => {
+      await transaction.insert(passwordResetTokens).values({
+        id: token.id,
+        userId: token.userId,
+        tokenHash: token.tokenHash,
+        expiresAt: token.expiresAt,
+        createdAt: token.createdAt,
+      });
+
+      await transaction.insert(auditEvents).values({
+        id: randomUUID(),
+        organizationId: token.organizationId,
+        actorUserId: token.userId,
+        action: "auth.password_reset.requested",
+        targetType: "user",
+        targetId: token.userId,
+        requestId: token.requestId,
+        createdAt: token.createdAt,
+      });
+    });
+  }
+
+  async findPasswordResetByTokenHash(tokenHash: string, now: Date): Promise<PasswordResetRecord | null> {
+    const rows = await this.database
+      .select({
+        id: passwordResetTokens.id,
+        userId: users.id,
+        email: users.email,
+        displayName: users.displayName,
+        organizationId: organizations.id,
+      })
+      .from(passwordResetTokens)
+      .innerJoin(users, eq(users.id, passwordResetTokens.userId))
+      .innerJoin(
+        organizationMemberships,
+        and(
+          eq(organizationMemberships.userId, users.id),
+          eq(organizationMemberships.status, "active"),
+        ),
+      )
+      .innerJoin(
+        organizations,
+        and(
+          eq(organizations.id, organizationMemberships.organizationId),
+          eq(organizations.status, "active"),
+        ),
+      )
+      .where(and(
+        eq(passwordResetTokens.tokenHash, tokenHash),
+        isNull(passwordResetTokens.usedAt),
+        gt(passwordResetTokens.expiresAt, now),
+        eq(users.status, "active"),
+      ))
+      .orderBy(asc(organizationMemberships.createdAt))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  async resetPasswordAndRevokeSessions(params: {
+    tokenId: string;
+    userId: string;
+    organizationId: string;
+    passwordHash: string;
+    requestId: string;
+    resetAt: Date;
+  }): Promise<void> {
+    await this.database.transaction(async (transaction) => {
+      await transaction
+        .update(passwordResetTokens)
+        .set({ usedAt: params.resetAt })
+        .where(and(eq(passwordResetTokens.id, params.tokenId), isNull(passwordResetTokens.usedAt)));
+
+      await transaction
+        .update(users)
+        .set({
+          passwordHash: params.passwordHash,
+          passwordChangedAt: params.resetAt,
+          updatedAt: params.resetAt,
+        })
+        .where(eq(users.id, params.userId));
+
+      await transaction
+        .update(sessions)
+        .set({ revokedAt: params.resetAt })
+        .where(and(eq(sessions.userId, params.userId), isNull(sessions.revokedAt)));
+
+      await transaction.insert(auditEvents).values({
+        id: randomUUID(),
+        organizationId: params.organizationId,
+        actorUserId: params.userId,
+        action: "auth.password_reset.completed",
+        targetType: "user",
+        targetId: params.userId,
+        requestId: params.requestId,
+        createdAt: params.resetAt,
+      });
+    });
+  }
+
   async deleteExpiredSessions(now: Date): Promise<void> {
     await this.database
       .delete(sessions)
       .where(lt(sessions.expiresAt, now));
   }
+
   async findByTokenHash(tokenHash: string, now: Date): Promise<AuthenticatedPrincipal | null> {
     const rows = await this.database
       .select({

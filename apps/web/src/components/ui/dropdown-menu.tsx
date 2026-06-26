@@ -13,7 +13,7 @@ function DropdownMenuTrigger({ className, ...props }: Menu.Trigger.Props) {
     <Menu.Trigger
       data-slot="dropdown-menu-trigger"
       className={cn(
-        "inline-flex cursor-pointer items-center justify-center rounded-xl border border-white/50 bg-white/55 text-muted-foreground shadow-sm backdrop-blur-xl transition-colors hover:bg-white/80 hover:text-foreground data-[popup-open]:bg-primary data-[popup-open]:text-primary-foreground dark:border-white/15 dark:bg-white/[0.08] dark:hover:bg-white/[0.16]",
+        "inline-flex cursor-pointer items-center justify-center rounded-xl bg-white/55 text-muted-foreground shadow-sm backdrop-blur-xl transition-all duration-300 hover:bg-white/80 hover:text-foreground hover:shadow-xl hover:shadow-primary/25 hover:ring-2 hover:ring-primary/30 data-[popup-open]:bg-primary data-[popup-open]:text-primary-foreground dark:bg-white/[0.08] dark:hover:bg-white/[0.16]",
         className,
       )}
       {...props}
@@ -28,7 +28,7 @@ function DropdownMenuContent({ className, ...props }: Menu.Popup.Props) {
         <Menu.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "min-w-40 overflow-y-auto rounded-xl border border-white/50 bg-popover/90 p-1 text-sm leading-5 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:border-white/15 dark:bg-popover/92",
+            "min-w-40 overflow-y-auto rounded-xl bg-popover/90 p-1 text-sm leading-5 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:bg-popover/92",
             className,
           )}
           {...props}
@@ -43,7 +43,7 @@ function DropdownMenuItem({ className, ...props }: Menu.Item.Props) {
     <Menu.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm leading-5 outline-none transition-colors data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm leading-5 outline-none transition-all duration-300 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
         className,
       )}
       {...props}

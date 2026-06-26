@@ -71,7 +71,7 @@ export function Select({
             aria-label={ariaLabel}
             aria-labelledby={ariaLabelledBy}
             className={cn(
-              "relative flex h-8 w-full min-w-0 items-center rounded-xl border border-input bg-background/70 py-1 pl-2.5 pr-8 text-left font-sans text-sm font-normal leading-5 text-foreground shadow-sm backdrop-blur-xl outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:disabled:bg-input/80",
+              "relative flex h-8 w-full min-w-0 items-center rounded-xl bg-background/70 py-1 pl-2.5 pr-8 text-left font-sans text-sm font-normal leading-5 text-foreground shadow-sm backdrop-blur-xl outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:disabled:bg-input/80",
               triggerClassName,
             )}
           >
@@ -97,7 +97,7 @@ export function Select({
           <SelectPrimitive.Positioner sideOffset={4} align="start" className="z-50">
             <SelectPrimitive.Popup
               className={cn(
-                "max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl border border-white/50 bg-popover/90 p-1 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:border-white/15 dark:bg-popover/92",
+                "max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl bg-popover/90 p-1 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:bg-popover/92",
                 popupClassName,
               )}
             >

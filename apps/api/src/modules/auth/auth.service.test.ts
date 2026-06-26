@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { LoginService, PasswordService } from "./auth.service.js";
+import { EmailService } from "../../shared/email/email.service.js";
 import type {
   AuthenticatedPrincipal,
   LoginAccount,
   LoginSessionStore,
   NewSession,
-  PasswordChangeStore,
+  PasswordResetStore,
 } from "./auth.types.js";
 
 const password = "not-a-real-user-password";
@@ -115,19 +116,52 @@ describe("LoginService", () => {
 describe("PasswordService", () => {
   function createPasswordStore(resolvedPrincipal: AuthenticatedPrincipal | null) {
     const fakes = createStore(account, resolvedPrincipal);
-    const findPasswordHashByUserId = vi.fn<PasswordChangeStore["findPasswordHashByUserId"]>()
+    const findPasswordHashByUserId = vi.fn<PasswordResetStore["findPasswordHashByUserId"]>()
       .mockResolvedValue(account.passwordHash);
-    const changePasswordAndRevokeSessions = vi.fn<PasswordChangeStore["changePasswordAndRevokeSessions"]>()
+    const changePasswordAndRevokeSessions = vi.fn<PasswordResetStore["changePasswordAndRevokeSessions"]>()
       .mockResolvedValue(undefined);
-    const deleteExpiredSessions = vi.fn<PasswordChangeStore["deleteExpiredSessions"]>()
+    const deleteExpiredSessions = vi.fn<PasswordResetStore["deleteExpiredSessions"]>()
       .mockResolvedValue(undefined);
-    const store: PasswordChangeStore = {
+    const findPasswordResetAccountByEmail = vi.fn<PasswordResetStore["findPasswordResetAccountByEmail"]>()
+      .mockResolvedValue({
+        userId: account.userId,
+        email: account.email,
+        displayName: account.displayName,
+        organizationId: account.organizationId,
+        organizationName: account.organizationName,
+      });
+    const createPasswordResetToken = vi.fn<PasswordResetStore["createPasswordResetToken"]>()
+      .mockResolvedValue(undefined);
+    const findPasswordResetByTokenHash = vi.fn<PasswordResetStore["findPasswordResetByTokenHash"]>()
+      .mockResolvedValue({
+        id: "reset-token-id",
+        userId: account.userId,
+        email: account.email,
+        displayName: account.displayName,
+        organizationId: account.organizationId,
+      });
+    const resetPasswordAndRevokeSessions = vi.fn<PasswordResetStore["resetPasswordAndRevokeSessions"]>()
+      .mockResolvedValue(undefined);
+    const store: PasswordResetStore = {
       ...fakes.store,
       findPasswordHashByUserId,
       changePasswordAndRevokeSessions,
       deleteExpiredSessions,
+      findPasswordResetAccountByEmail,
+      createPasswordResetToken,
+      findPasswordResetByTokenHash,
+      resetPasswordAndRevokeSessions,
     };
-    return { ...fakes, store, findPasswordHashByUserId, changePasswordAndRevokeSessions };
+    return {
+      ...fakes,
+      store,
+      findPasswordHashByUserId,
+      changePasswordAndRevokeSessions,
+      findPasswordResetAccountByEmail,
+      createPasswordResetToken,
+      findPasswordResetByTokenHash,
+      resetPasswordAndRevokeSessions,
+    };
   }
 
   it("changes the password, revokes existing sessions, and returns a rotated session", async () => {
@@ -165,4 +199,84 @@ describe("PasswordService", () => {
     expect(fakes.changePasswordAndRevokeSessions).not.toHaveBeenCalled();
     expect(fakes.createSession).not.toHaveBeenCalled();
   });
+  it("creates and emails a single-use password reset token", async () => {
+    const fakes = createPasswordStore(principal);
+    const emailService = new EmailService();
+    const sendPasswordReset = vi.spyOn(emailService, "sendPasswordReset").mockResolvedValue(undefined);
+    const service = new PasswordService(fakes.store, 12 * 60 * 60 * 1_000, emailService);
+    const now = new Date("2030-01-01T00:00:00.000Z");
+
+    await service.requestPasswordReset(account.email, {
+      ipAddress: "127.0.0.1",
+      userAgent: "test",
+      requestId: "request-id",
+    }, now);
+
+    expect(fakes.createPasswordResetToken).toHaveBeenCalledOnce();
+    const storedToken = fakes.createPasswordResetToken.mock.calls[0]?.[0];
+    expect(storedToken?.tokenHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(storedToken?.expiresAt.toISOString()).toBe("2030-01-01T01:00:00.000Z");
+    const emailParams = sendPasswordReset.mock.calls[0]?.[0];
+    expect(emailParams).toBeDefined();
+    expect(emailParams?.email).toBe(account.email);
+    expect(emailParams?.resetLink).toContain("/reset-password?token=");
+    expect(emailParams?.expiresInMinutes).toBe(60);
+  });
+
+  it("does not reveal whether a password reset email exists", async () => {
+    const fakes = createPasswordStore(principal);
+    fakes.findPasswordResetAccountByEmail.mockResolvedValueOnce(null);
+    const emailService = new EmailService();
+    const sendPasswordReset = vi.spyOn(emailService, "sendPasswordReset").mockResolvedValue(undefined);
+    const service = new PasswordService(fakes.store, 12 * 60 * 60 * 1_000, emailService);
+
+    await expect(service.requestPasswordReset("missing@example.com", {
+      ipAddress: null,
+      userAgent: null,
+      requestId: "request-id",
+    })).resolves.toBeUndefined();
+
+    expect(fakes.createPasswordResetToken).not.toHaveBeenCalled();
+    expect(sendPasswordReset).not.toHaveBeenCalled();
+  });
+
+  it("resets a password with a valid reset token and revokes existing sessions", async () => {
+    const fakes = createPasswordStore(principal);
+    const service = new PasswordService(fakes.store, 12 * 60 * 60 * 1_000);
+    const now = new Date("2030-01-01T00:00:00.000Z");
+
+    await service.resetPassword("a-secure-password-reset-token-with-enough-entropy", "a-new-valid-password", {
+      ipAddress: "127.0.0.1",
+      userAgent: "test",
+      requestId: "request-id",
+    }, now);
+
+    expect(fakes.findPasswordResetByTokenHash).toHaveBeenCalledWith(expect.stringMatching(/^[a-f0-9]{64}$/), now);
+    const resetParams = fakes.resetPasswordAndRevokeSessions.mock.calls[0]?.[0];
+    expect(resetParams).toEqual(expect.objectContaining({
+      tokenId: "reset-token-id",
+      userId: account.userId,
+      organizationId: account.organizationId,
+      requestId: "request-id",
+      resetAt: now,
+    }));
+    expect(resetParams?.passwordHash).toContain("$argon2id$");
+  });
+
+  it("rejects an invalid password reset token", async () => {
+    const fakes = createPasswordStore(principal);
+    fakes.findPasswordResetByTokenHash.mockResolvedValueOnce(null);
+    const service = new PasswordService(fakes.store, 12 * 60 * 60 * 1_000);
+
+    await expect(service.resetPassword("an-invalid-password-reset-token-with-enough-entropy", "a-new-valid-password", {
+      ipAddress: null,
+      userAgent: null,
+      requestId: "request-id",
+    })).rejects.toMatchObject({ statusCode: 400, code: "INVALID_PASSWORD_RESET_TOKEN" });
+
+    expect(fakes.resetPasswordAndRevokeSessions).not.toHaveBeenCalled();
+  });
 });
+
+
+

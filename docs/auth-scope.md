@@ -28,6 +28,22 @@ The project currently has:
 - Public web login and server-validated protected application layout
 - Current-user display and logout are available in the protected navigation
 - Product routes intentionally remain unprotected until route-level authorization is approved
+
+- Users page supports server-side search, status filtering, role filtering, pagination, loading states, and permission-gated actions
+- Roles page supports permission-gated create, update, and delete controls
+- Shared DataTable toolbar pattern is stabilized for future Product and Supplier list pages
+
+## Current Stabilization Checkpoint
+
+The Users and Roles administration surfaces have passed automated QA:
+
+- Type-check passes
+- ESLint passes
+- Unit and integration tests pass
+- Production build passes
+
+Browser QA is still recommended before release, especially for mobile width, dark mode, keyboard use, and the invite/role assignment dialogs.
+
 ## Decisions
 
 ### Account model

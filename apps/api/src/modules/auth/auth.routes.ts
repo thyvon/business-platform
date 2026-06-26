@@ -1,4 +1,11 @@
-import { changePasswordSchema, loginSchema, updateUserSchema, type CurrentSession } from "@business/contracts";
+import {
+  changePasswordSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  resetPasswordSchema,
+  updateUserSchema,
+  type CurrentSession,
+} from "@business/contracts";
 import { Router } from "express";
 import type { RequestHandler } from "express";
 import { AppError } from "../../shared/errors/app-error.js";
@@ -11,7 +18,7 @@ import type {
 } from "./auth.service.js";
 import type { AuthenticatedPrincipal } from "./auth.types.js";
 import type { AuthRepository } from "./auth.repository.js";
-import type { LoginRateLimiter } from "./login-rate-limiter.js";
+import type { LoginRateLimiter, RecoveryRateLimiter } from "./login-rate-limiter.js";
 
 interface LoginSessions {
   login(
@@ -27,6 +34,8 @@ interface LoginSessions {
     metadata: LoginMetadata,
     now?: Date,
   ): Promise<LoginResult>;
+  requestPasswordReset(email: string, metadata: LoginMetadata, now?: Date): Promise<void>;
+  resetPassword(token: string, newPassword: string, metadata: LoginMetadata, now?: Date): Promise<void>;
   logout(principal: AuthenticatedPrincipal, requestId: string, now?: Date): Promise<void>;
 }
 
@@ -35,6 +44,7 @@ interface AuthRouterDependencies {
   loginSessions: LoginSessions;
   csrfProtection: RequestHandler;
   loginRateLimiter: LoginRateLimiter;
+  recoveryRateLimiter: RecoveryRateLimiter;
   secureCookies: boolean;
   authRepository: AuthRepository;
 }
@@ -51,6 +61,14 @@ function toCurrentSession(principal: AuthenticatedPrincipal): CurrentSession {
   };
 }
 
+function getLoginMetadata(request: Parameters<RequestHandler>[0], requestId: string): LoginMetadata {
+  return {
+    ipAddress: request.ip || null,
+    userAgent: request.header("user-agent")?.slice(0, 2_000) ?? null,
+    requestId,
+  };
+}
+
 export function createAuthRouter(dependencies: AuthRouterDependencies) {
   const router = Router();
   const authenticate = createAuthenticate(dependencies.authenticator);
@@ -63,11 +81,12 @@ export function createAuthRouter(dependencies: AuthRouterDependencies) {
     dependencies.loginRateLimiter.assertAllowed(ipAddress, input.email, now);
 
     try {
-      const result = await dependencies.loginSessions.login(input.email, input.password, {
-        ipAddress: request.ip || null,
-        userAgent: request.header("user-agent")?.slice(0, 2_000) ?? null,
-        requestId: String(response.locals.requestId),
-      }, now);
+      const result = await dependencies.loginSessions.login(
+        input.email,
+        input.password,
+        getLoginMetadata(request, String(response.locals.requestId)),
+        now,
+      );
 
       dependencies.loginRateLimiter.recordSuccess(ipAddress, input.email);
       response.setHeader(
@@ -87,6 +106,27 @@ export function createAuthRouter(dependencies: AuthRouterDependencies) {
     }
   });
 
+  router.post("/forgot-password", dependencies.csrfProtection, async (request, response) => {
+    const input = forgotPasswordSchema.parse(request.body);
+    dependencies.recoveryRateLimiter.consumeForgotPassword(request.ip || "unknown", input.email);
+    await dependencies.loginSessions.requestPasswordReset(
+      input.email,
+      getLoginMetadata(request, String(response.locals.requestId)),
+    );
+    response.status(204).send();
+  });
+
+  router.post("/reset-password", dependencies.csrfProtection, async (request, response) => {
+    const input = resetPasswordSchema.parse(request.body);
+    dependencies.recoveryRateLimiter.consumeResetPassword(request.ip || "unknown", input.token);
+    await dependencies.loginSessions.resetPassword(
+      input.token,
+      input.newPassword,
+      getLoginMetadata(request, String(response.locals.requestId)),
+    );
+    response.status(204).send();
+  });
+
   router.post("/logout", dependencies.csrfProtection, authenticate, async (request, response) => {
     await dependencies.loginSessions.logout(
       request.principal!,
@@ -95,17 +135,14 @@ export function createAuthRouter(dependencies: AuthRouterDependencies) {
     response.setHeader("set-cookie", clearSessionCookie(dependencies.secureCookies));
     response.status(204).send();
   });
+
   router.post("/change-password", dependencies.csrfProtection, authenticate, async (request, response) => {
     const input = changePasswordSchema.parse(request.body);
     const result = await dependencies.loginSessions.changePassword(
       request.principal!,
       input.currentPassword,
       input.newPassword,
-      {
-        ipAddress: request.ip || null,
-        userAgent: request.header("user-agent")?.slice(0, 2_000) ?? null,
-        requestId: String(response.locals.requestId),
-      },
+      getLoginMetadata(request, String(response.locals.requestId)),
     );
 
     response.setHeader(
@@ -135,3 +172,4 @@ export function createAuthRouter(dependencies: AuthRouterDependencies) {
 
   return router;
 }
+

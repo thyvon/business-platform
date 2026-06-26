@@ -1,16 +1,20 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { hashPassword, verifyPassword } from "@business/database";
+import { env } from "../../config/env.js";
 import { AppError } from "../../shared/errors/app-error.js";
+import type { EmailService } from "../../shared/email/email.service.js";
 import type {
   AuthenticatedPrincipal,
   LoginAccount,
   LoginSessionStore,
-  PasswordChangeStore,
+  PasswordResetStore,
   SessionPrincipalStore,
 } from "./auth.types.js";
 
 const MINIMUM_SESSION_TOKEN_LENGTH = 32;
 const MAXIMUM_SESSION_TOKEN_LENGTH = 512;
+const PASSWORD_RESET_TOKEN_BYTES = 32;
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1_000;
 const DUMMY_PASSWORD_HASH = "$argon2id$v=19$m=19456,t=2,p=1$emaEWUFozqFE9TuaGeP5Fg$Gzx+SfokKyiZlgxqE1TWPgDvzKuEho0KH/7ymWJwLEs";
 
 export interface SessionAuthenticator {
@@ -98,10 +102,12 @@ export class LoginService {
     return { token, principal };
   }
 }
+
 export class PasswordService extends LoginService {
   constructor(
-    protected readonly store: PasswordChangeStore,
+    protected readonly store: PasswordResetStore,
     sessionTtlMs: number,
+    private readonly emailService?: EmailService,
   ) {
     super(store, sessionTtlMs);
   }
@@ -140,4 +146,60 @@ export class PasswordService extends LoginService {
       membershipId: principal.membershipId,
     }, metadata, now);
   }
+
+  async requestPasswordReset(email: string, metadata: LoginMetadata, now = new Date()): Promise<void> {
+    const account = await this.store.findPasswordResetAccountByEmail(email);
+    if (!account) return;
+
+    if (!this.emailService) {
+      throw new AppError(500, "EMAIL_SERVICE_UNAVAILABLE", "Password reset email is not configured.");
+    }
+
+    const token = randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("base64url");
+    const tokenHash = hashSessionToken(token);
+    const expiresAt = new Date(now.getTime() + PASSWORD_RESET_TTL_MS);
+
+    await this.store.createPasswordResetToken({
+      id: randomUUID(),
+      userId: account.userId,
+      organizationId: account.organizationId,
+      tokenHash,
+      expiresAt,
+      requestId: metadata.requestId,
+      createdAt: now,
+    });
+
+    await this.emailService.sendPasswordReset({
+      email: account.email,
+      displayName: account.displayName,
+      organizationName: account.organizationName,
+      resetLink: `${env.webOrigin}/reset-password?token=${token}`,
+      expiresInMinutes: Math.round(PASSWORD_RESET_TTL_MS / 60_000),
+    });
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+    metadata: LoginMetadata,
+    now = new Date(),
+  ): Promise<void> {
+    const reset = await this.store.findPasswordResetByTokenHash(hashSessionToken(token), now);
+
+    if (!reset) {
+      throw new AppError(400, "INVALID_PASSWORD_RESET_TOKEN", "The password reset link is invalid or expired.");
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    await this.store.resetPasswordAndRevokeSessions({
+      tokenId: reset.id,
+      userId: reset.userId,
+      organizationId: reset.organizationId,
+      passwordHash,
+      requestId: metadata.requestId,
+      resetAt: now,
+    });
+  }
 }
+
+

@@ -85,7 +85,7 @@ export function MultiSelect({
           aria-labelledby={ariaLabelledBy}
           disabled={disabled}
           className={cn(
-            "flex min-h-8 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-input bg-background px-2.5 py-1 text-left font-sans text-sm font-normal leading-5 text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:bg-input/30 dark:disabled:bg-input/80",
+            "flex min-h-8 w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-background px-2.5 py-1 text-left font-sans text-sm font-normal leading-5 text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:bg-input/30 dark:disabled:bg-input/80",
             triggerClassName,
           )}
         >
@@ -119,7 +119,7 @@ export function MultiSelect({
           <Menu.Positioner sideOffset={4} align="start" className="z-50">
             <Menu.Popup
               className={cn(
-                "max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none",
+                "max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-lg outline-none",
                 popupClassName,
               )}
             >
@@ -132,7 +132,7 @@ export function MultiSelect({
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search roles..."
-                      className="w-full rounded-md border border-input bg-muted/50 py-1.5 pl-8 pr-2.5 font-sans text-sm font-normal leading-5 text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className=                      "w-full rounded-md bg-muted/50 py-1.5 pl-8 pr-2.5 font-sans text-sm font-normal leading-5 text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
