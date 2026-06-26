@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Select as SelectPrimitive } from "@base-ui/react/select";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, X } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 export interface SelectOption {
@@ -26,6 +26,7 @@ export interface SelectProps {
   popupClassName?: string;
   ariaLabel?: string;
   ariaLabelledBy?: string;
+  clearable?: boolean;
 }
 
 export function Select({
@@ -43,7 +44,16 @@ export function Select({
   popupClassName,
   ariaLabel,
   ariaLabelledBy,
+  clearable = false,
 }: SelectProps) {
+  const hasValue = value !== undefined && value !== null && value !== "";
+
+  function clearSelection(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    onValueChange?.(null);
+  }
+
   return (
     <SelectPrimitive.Root
       id={id}
@@ -56,24 +66,38 @@ export function Select({
       items={options.map((option) => ({ value: option.value, label: option.label }))}
     >
       <div className={cn("relative w-full", className)}>
-        <SelectPrimitive.Trigger
-          aria-label={ariaLabel}
-          aria-labelledby={ariaLabelledBy}
-          className={cn(
-            "flex h-8 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-input bg-background px-2.5 py-1 text-left text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:disabled:bg-input/80",
-            triggerClassName,
-          )}
-        >
-          <SelectPrimitive.Value placeholder={placeholder} />
-          <SelectPrimitive.Icon>
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          </SelectPrimitive.Icon>
-        </SelectPrimitive.Trigger>
+        <div className="relative">
+          <SelectPrimitive.Trigger
+            aria-label={ariaLabel}
+            aria-labelledby={ariaLabelledBy}
+            className={cn(
+              "relative flex h-8 w-full min-w-0 items-center rounded-xl border border-input bg-background/70 py-1 pl-2.5 pr-8 text-left font-sans text-sm font-normal leading-5 text-foreground shadow-sm backdrop-blur-xl outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:disabled:bg-input/80",
+              triggerClassName,
+            )}
+          >
+            <SelectPrimitive.Value placeholder={placeholder} className="flex min-w-0 flex-1 items-center truncate font-[inherit] text-[inherit] leading-[inherit]" />
+            {clearable && hasValue ? null : (
+              <SelectPrimitive.Icon className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center">
+                <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
+              </SelectPrimitive.Icon>
+            )}
+          </SelectPrimitive.Trigger>
+          {clearable && hasValue && !disabled ? (
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="absolute inset-y-0 right-0 flex w-8 items-center justify-center rounded-r-lg text-muted-foreground hover:text-foreground"
+              aria-label="Clear selection"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
         <SelectPrimitive.Portal>
           <SelectPrimitive.Positioner sideOffset={4} align="start" className="z-50">
             <SelectPrimitive.Popup
               className={cn(
-                "max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none",
+                "max-h-72 min-w-[var(--anchor-width)] overflow-y-auto rounded-xl border border-white/50 bg-popover/90 p-1 text-popover-foreground shadow-xl backdrop-blur-2xl outline-none dark:border-white/15 dark:bg-popover/92",
                 popupClassName,
               )}
             >
@@ -82,12 +106,12 @@ export function Select({
                   key={option.value}
                   value={option.value}
                   disabled={option.disabled}
-                  className="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+                  className="grid cursor-pointer grid-cols-[minmax(0,1fr)_1rem] items-center gap-2 rounded-lg px-2 py-1.5 font-sans text-sm font-normal leading-5 outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                 >
-                  <SelectPrimitive.ItemIndicator>
+                  <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
+                  <SelectPrimitive.ItemIndicator className="justify-self-end">
                     <Check className="size-3.5" aria-hidden="true" />
                   </SelectPrimitive.ItemIndicator>
-                  <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
                 </SelectPrimitive.Item>
               ))}
             </SelectPrimitive.Popup>
@@ -97,3 +121,7 @@ export function Select({
     </SelectPrimitive.Root>
   );
 }
+
+
+
+

@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { ChartNoAxesCombined, PackageSearch, Building2, Settings, X } from "lucide-react";
+import { ChartNoAxesCombined, PackageSearch, Building2, Settings, X } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 
 const navigation: { href: Route; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -34,11 +34,11 @@ export function Sidebar({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border bg-sidebar transition-all duration-300 lg:static lg:z-auto ${
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/50 bg-sidebar/80 shadow-sm backdrop-blur-2xl transition-all duration-300 dark:border-white/15 dark:bg-sidebar/85 lg:static lg:z-auto ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 ${collapsed ? "lg:w-16" : "lg:w-60"} w-60`}
       >
-        <div className="flex h-16 items-center border-b border-border px-4">
+        <div className="flex h-16 items-center border-b border-white/50 px-4 dark:border-white/15">
           <Link
             href="/"
             onClick={onMobileClose}
@@ -46,7 +46,7 @@ export function Sidebar({
               collapsed ? "lg:mx-auto" : ""
             }`}
           >
-            <span className="rounded-xl bg-primary p-2 text-primary-foreground">
+            <span className="rounded-2xl bg-primary p-2 text-primary-foreground shadow-sm">
               <PackageSearch className="size-5" />
             </span>
             <span className={collapsed ? "lg:hidden" : ""}>
@@ -75,8 +75,8 @@ export function Sidebar({
                 title={collapsed ? label : undefined}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
                   isActive
-                    ? "bg-primary/10 text-primary dark:bg-primary/15"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-white/70 text-primary shadow-sm ring-1 ring-primary/10 dark:bg-white/[0.08] dark:ring-white/10"
+                    : "text-muted-foreground hover:bg-white/60 hover:text-foreground dark:hover:bg-white/[0.12]"
                 }`}
               >
                 <Icon className="size-4 shrink-0" />
@@ -89,3 +89,6 @@ export function Sidebar({
     </>
   );
 }
+
+
+

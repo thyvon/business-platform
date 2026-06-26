@@ -15,7 +15,7 @@ export function createInvitationRouter(service: InvitationService, authenticate:
       principal.organization.name,
       principal.user.id,
       principal.user.displayName,
-      String(request.id),
+      String(response.locals.requestId),
       parsed,
     );
     response.status(204).send();
@@ -32,3 +32,4 @@ export function createInvitationRouter(service: InvitationService, authenticate:
 
   return router;
 }
+

@@ -41,7 +41,7 @@ export class EmailService {
   }
 
   private async send(params: { email: string; subject: string; text: string }): Promise<void> {
-    const info = await this.transporter.sendMail({
+    const info: unknown = await this.transporter.sendMail({
       from: env.smtp.from,
       to: params.email,
       subject: params.subject,
@@ -49,14 +49,19 @@ export class EmailService {
     });
 
     if (!env.smtp.configured) {
-      const message = info as unknown as { message: string };
+      const message = typeof info === "object" && info !== null && "message" in info
+        && typeof (info as { message?: unknown }).message === "string"
+        ? (info as { message: string }).message
+        : "";
       console.log("--- Email (dev mode) ---");
       console.log("To:", params.email);
       console.log("Subject:", params.subject);
       console.log("Body:");
       console.log(params.text);
       console.log("---");
-      if (message.message) console.log("Raw:", message.message);
+      if (message) console.log("Raw:", message);
     }
   }
 }
+
+

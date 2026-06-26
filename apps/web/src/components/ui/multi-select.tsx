@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Menu } from "@base-ui/react/menu";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Search, X } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 export interface MultiSelectOption {
@@ -85,7 +85,7 @@ export function MultiSelect({
           aria-labelledby={ariaLabelledBy}
           disabled={disabled}
           className={cn(
-            "flex min-h-8 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-input bg-background px-2.5 py-1 text-left text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:bg-input/30 dark:disabled:bg-input/80",
+            "flex min-h-8 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-input bg-background px-2.5 py-1 text-left font-sans text-sm font-normal leading-5 text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 dark:bg-input/30 dark:disabled:bg-input/80",
             triggerClassName,
           )}
         >
@@ -126,20 +126,20 @@ export function MultiSelect({
               {searchable && (
                 <div className="sticky top-0 z-10 bg-popover px-2 pb-1 pt-1">
                   <div className="relative">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
                     <input
                       type="text"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search roles..."
-                      className="w-full rounded-md border border-input bg-muted/50 py-1.5 pl-8 pr-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="w-full rounded-md border border-input bg-muted/50 py-1.5 pl-8 pr-2.5 font-sans text-sm font-normal leading-5 text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
                 </div>
               )}
               {filtered.length === 0 ? (
-                <div className="px-2 py-4 text-center text-sm text-muted-foreground">No options found</div>
+                <div className="px-2 py-4 text-center text-sm leading-5 text-muted-foreground">No options found</div>
               ) : (
                 filtered.map((option) => {
                   const checked = value.includes(option.value);
@@ -151,7 +151,7 @@ export function MultiSelect({
                       disabled={option.disabled}
                       closeOnClick={false}
                       label={getOptionText(option.label)}
-                      className="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+                      className="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-md px-2 py-1.5 font-sans text-sm font-normal leading-5 outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                     >
                       <Menu.CheckboxItemIndicator>
                         <Check className="size-3.5" aria-hidden="true" />
@@ -168,3 +168,6 @@ export function MultiSelect({
     </Menu.Root>
   );
 }
+
+
+

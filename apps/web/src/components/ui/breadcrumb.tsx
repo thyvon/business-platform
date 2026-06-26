@@ -1,4 +1,4 @@
-import { ChevronRight, MoreHorizontal } from "lucide-react"
+﻿import { ChevronRight, MoreHorizontal } from "@/components/ui/icons"
 import { cn } from "@/lib/utils"
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
@@ -9,7 +9,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   return (
     <ol
       className={cn(
-        "flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground sm:gap-2.5",
+        "flex flex-wrap items-center gap-1.5 break-words text-sm leading-5 text-muted-foreground sm:gap-2.5",
         className
       )}
       {...props}
@@ -74,3 +74,4 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span"
 }
 
 export { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbEllipsis }
+

@@ -1,3 +1,4 @@
+﻿import Image from "next/image";
 import type { Metadata } from "next";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
@@ -39,7 +40,14 @@ export default async function LoginPage({
       <div className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <img src="https://sms.mjqeducation.edu.kh/assets/images/logo/logo-dark.png" alt="Logo" className="mx-auto h-14" />
+            <Image
+              src="https://sms.mjqeducation.edu.kh/assets/images/logo/logo-dark.png"
+              alt="Logo"
+              width={160}
+              height={56}
+              priority
+              className="mx-auto h-14 w-auto"
+            />
             <h1 className="mt-6 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Welcome back
             </h1>

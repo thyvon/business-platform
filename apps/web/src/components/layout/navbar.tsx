@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import type { CurrentSession } from "@business/contracts";
-import { LoaderCircle, LogOut, Moon, PanelLeft, Settings, Sun } from "lucide-react";
+import { LoaderCircle, LogOut, Moon, PanelLeft, Settings, Sun } from "@/components/ui/icons";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -55,7 +55,7 @@ export function Navbar({
   }
 
   return (
-    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-background px-4 py-2">
+    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-white/50 bg-background/80 px-4 py-2 shadow-sm backdrop-blur-2xl dark:border-white/15 dark:bg-background/85">
       <Button
         variant="ghost"
         size="icon"
@@ -71,7 +71,7 @@ export function Navbar({
             {logoutError}
           </span>
         )}
-        <button type="button" onClick={() => router.push("/profile" as Route)} className="hidden min-w-0 items-center gap-2.5 sm:flex cursor-pointer">
+        <button type="button" onClick={() => router.push("/profile" as Route)} className="hidden min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl px-2 py-1 transition-colors hover:bg-muted/50 sm:flex">
           <Avatar size="sm">
             <AvatarFallback>{getInitials(currentSession.user.displayName)}</AvatarFallback>
           </Avatar>
@@ -113,3 +113,5 @@ export function Navbar({
     </header>
   );
 }
+
+

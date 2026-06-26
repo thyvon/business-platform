@@ -1,4 +1,4 @@
-import { ArrowRight, Boxes, Building2, PackageSearch, ShoppingCart } from "lucide-react";
+﻿import { ArrowRight, Boxes, Building2, PackageSearch, ShoppingCart } from "@/components/ui/icons";
 import { SystemStatus } from "@/features/dashboard/components/system-status";
 
 const modules = [
@@ -31,3 +31,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

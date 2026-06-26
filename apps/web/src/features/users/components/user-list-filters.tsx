@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Search, X } from "@/components/ui/icons";
 import type { UserListQuery } from "@business/contracts/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,7 +71,7 @@ export function UserListFilters({ query }: { query: UserListQuery }) {
           <div>
             <Label htmlFor="search">Search users</Label>
             <div className="relative mt-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="search"
                 name="search"
@@ -123,3 +123,5 @@ const statusOptions = [
   { value: "active", label: "Active" },
   { value: "suspended", label: "Suspended" },
 ];
+
+

@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState, type FormEvent } from "react";
-import { Check, KeyRound, LoaderCircle, Pencil, X } from "lucide-react";
+import { Check, KeyRound, LoaderCircle, Pencil, X } from "@/components/ui/icons";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import type { CurrentSession } from "@business/contracts";
@@ -233,3 +233,4 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

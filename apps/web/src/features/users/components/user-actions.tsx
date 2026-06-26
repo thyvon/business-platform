@@ -1,13 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useState } from "react";
-import { Ellipsis, Pencil, Shield, ShieldOff, LogOut } from "lucide-react";
+import { Ellipsis, Pencil, Shield, ShieldOff, LogOut } from "@/components/ui/icons";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { MultiSelect } from "@/components/ui/multi-select";
+import { MultiCombobox } from "@/components/ui/combobox";
 import { apiRequest, ApiClientError } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 
@@ -321,12 +321,11 @@ function AssignRolesDialog({
         </DialogHeader>
         <div className="space-y-2">
           <label className="text-sm font-medium">Roles</label>
-          <MultiSelect
+          <MultiCombobox
             value={selected}
             onValueChange={setSelected}
             options={roleOptions.map((r) => ({ value: r.id, label: r.name }))}
             placeholder="Select roles"
-            searchable
           />
         </div>
         <DialogFooter>
@@ -388,4 +387,6 @@ function RevokeSessionsDialog({
     </Dialog>
   );
 }
+
+
 

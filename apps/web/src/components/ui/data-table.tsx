@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { Route } from "next";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DataTablePaginationBar } from "@/components/ui/data-table-pagination-bar";
+import { DataTablePageSizeControl, DataTablePaginationBar } from "@/components/ui/data-table-pagination-bar";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -33,6 +33,8 @@ export interface DataTableProps<TItem> {
   emptyDescription?: string;
   pagination?: DataTablePagination;
   pageSizeOptions?: number[];
+  toolbar?: ReactNode;
+  showPageSizeControl?: boolean;
   minWidthClassName?: string;
   loading?: boolean;
   loadingLabel?: string;
@@ -47,6 +49,8 @@ export function DataTable<TItem>({
   emptyDescription,
   pagination,
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
+  toolbar,
+  showPageSizeControl = true,
   minWidthClassName = "min-w-[760px]",
   loading = false,
   loadingLabel = "Loading rows",
@@ -59,9 +63,20 @@ export function DataTable<TItem>({
     ? Math.min(pagination.page * pagination.pageSize, pagination.total)
     : items.length;
   const hasRows = items.length > 0;
+  const shouldRenderTopControls = Boolean(toolbar || (pagination && showPageSizeControl));
 
   return (
-    <div className={cn("space-y-3", className)} aria-busy={loading || undefined}>
+    <div className={cn("space-y-2", className)} aria-busy={loading || undefined}>
+      {shouldRenderTopControls && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          {toolbar && <div className="min-w-0 flex-1">{toolbar}</div>}
+          {pagination && showPageSizeControl && (
+            <div className="flex shrink-0 items-center justify-end">
+              <DataTablePageSizeControl pagination={pagination} pageSizeOptions={pageSizeOptions} />
+            </div>
+          )}
+        </div>
+      )}
       <Card className="py-0">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -96,9 +111,9 @@ export function DataTable<TItem>({
                   <TableRow>
                     <TableCell colSpan={columns.length}>
                       <div className="px-6 py-12 text-center">
-                        <h2 className="text-base font-semibold text-foreground">{emptyTitle}</h2>
+                        <h2 className="text-base font-semibold leading-6 text-foreground">{emptyTitle}</h2>
                         {emptyDescription && (
-                          <p className="mt-2 text-sm text-muted-foreground">{emptyDescription}</p>
+                          <p className="mt-2 text-sm leading-5 text-muted-foreground">{emptyDescription}</p>
                         )}
                       </div>
                     </TableCell>
@@ -109,10 +124,9 @@ export function DataTable<TItem>({
           </div>
         </CardContent>
         {pagination && (
-          <CardFooter className="border-t-0 px-0 py-3">
+          <CardFooter className="border-t px-3 py-2 sm:px-4">
             <DataTablePaginationBar
               pagination={pagination}
-              pageSizeOptions={pageSizeOptions}
               showingStart={showingStart}
               showingEnd={showingEnd}
             />
@@ -125,7 +139,7 @@ export function DataTable<TItem>({
 
 function DataTablePreloader({ label }: { label: string }) {
   return (
-    <div role="status" aria-label={label} className="flex min-h-56 flex-col items-center justify-center gap-3 px-6 py-12 text-sm text-muted-foreground">
+    <div role="status" aria-label={label} className="flex min-h-56 flex-col items-center justify-center gap-3 px-6 py-12 text-sm leading-5 text-muted-foreground">
       <div className="size-8 animate-spin rounded-full border-2 border-border border-t-primary" aria-hidden="true" />
       <span>{label}</span>
     </div>

@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
-import { ShieldCheck, UsersRound } from "lucide-react";
+import { ShieldCheck, UsersRound } from "@/components/ui/icons";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 

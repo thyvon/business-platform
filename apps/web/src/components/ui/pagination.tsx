@@ -1,6 +1,6 @@
-import type { Route } from "next";
+﻿import type { Route } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "@/components/ui/icons";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -114,3 +114,5 @@ export {
   PaginationNext,
   PaginationPrevious,
 };
+
+

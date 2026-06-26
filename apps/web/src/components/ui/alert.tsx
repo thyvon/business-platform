@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "group/alert relative flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-sm has-data-[slot=alert-action]:pr-10 [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0",
+  "group/alert relative flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-sm leading-5 has-data-[slot=alert-action]:pr-10 [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -57,10 +57,7 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-action"
-      className={cn(
-        "absolute top-3 right-3",
-        className
-      )}
+      className={cn("absolute top-3 right-3", className)}
       {...props}
     />
   )

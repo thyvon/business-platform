@@ -1,12 +1,12 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { UserRoundPlus } from "lucide-react";
+import { useCallback, useState } from "react";
+import { UserRoundPlus } from "@/components/ui/icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { MultiSelect } from "@/components/ui/multi-select";
+import { MultiCombobox } from "@/components/ui/combobox";
 import { apiRequest, ApiClientError } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 
@@ -47,13 +47,6 @@ function InviteUserDialog({
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      setEmail("");
-      setSelectedRoles([]);
-    }
-  }, [open]);
-
   const handleInvite = useCallback(async () => {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) { toast.error("Email address is required."); return; }
@@ -77,7 +70,13 @@ function InviteUserDialog({
   }, [email, selectedRoles, onOpenChange, router]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (nextOpen) {
+        setEmail("");
+        setSelectedRoles([]);
+      }
+      onOpenChange(nextOpen);
+    }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Invite user</DialogTitle>
@@ -98,12 +97,11 @@ function InviteUserDialog({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Roles</label>
-            <MultiSelect
+            <MultiCombobox
               value={selectedRoles}
               onValueChange={setSelectedRoles}
               options={roleOptions.map((r) => ({ value: r.id, label: r.name }))}
               placeholder="Select roles"
-              searchable
             />
           </div>
         </div>
@@ -117,3 +115,8 @@ function InviteUserDialog({
     </Dialog>
   );
 }
+
+
+
+
+

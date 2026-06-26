@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState, type FormEvent } from "react";
-import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle, LogIn } from "@/components/ui/icons";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import type { CurrentSession } from "@business/contracts";
@@ -120,7 +120,7 @@ export function LoginForm({
         {submitting ? (
           <>
             <LoaderCircle className="size-4 animate-spin" />
-            Signing in…
+            Signing inâ€¦
           </>
         ) : (
           <>

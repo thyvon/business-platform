@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useState } from "react";
-import { Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Pencil, Plus, ShieldCheck, Trash2 } from "@/components/ui/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -167,4 +167,5 @@ export function RolesList({
     </>
   );
 }
+
 

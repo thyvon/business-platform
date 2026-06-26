@@ -1,14 +1,15 @@
-import { Suspense } from "react";
+﻿import { Suspense } from "react";
 import type { Metadata } from "next";
 import type { Route } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { UsersRound } from "lucide-react";
+import { UsersRound } from "@/components/ui/icons";
 import Link from "next/link";
 import { userListQuerySchema, userListResponseSchema, type UserListItem, type UserListQuery, type UserListResponse } from "@business/contracts/auth";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTablePageSizeControl } from "@/components/ui/data-table-pagination-bar";
 import { DataTableToolbar, type DataTableToolbarFilter } from "@/components/ui/data-table-toolbar";
 import { buildLoginPath } from "@/lib/auth-redirect";
 import { getCurrentSession } from "@/lib/server-auth";
@@ -139,8 +140,24 @@ export default async function UsersPage({ searchParams }: { searchParams: Search
       label: "Role",
       placeholder: "All roles",
       options: roleOptions,
+      searchable: true,
     },
   ];
+
+  const pageSizePagination = {
+    page: query.page,
+    pageSize: query.pageSize,
+    total: 0,
+    totalPages: 1,
+    previousHref: usersPath(query, { page: Math.max(1, query.page - 1) }),
+    nextHref: usersPath(query, { page: query.page + 1 }),
+    pageSizeHrefs: {
+      10: usersPath(query, { pageSize: 10, page: 1 }),
+      20: usersPath(query, { pageSize: 20, page: 1 }),
+      50: usersPath(query, { pageSize: 50, page: 1 }),
+      100: usersPath(query, { pageSize: 100, page: 1 }),
+    },
+  };
 
   return (
     <>
@@ -173,14 +190,15 @@ export default async function UsersPage({ searchParams }: { searchParams: Search
         <InviteUserButton roleOptions={rolesData} />
       </div>
 
-      <DataTableToolbar
-        searchPlaceholder="Name or email"
-        filters={userFilters}
-      />
+      <div className="space-y-2">
+        <DataTableToolbar searchPlaceholder="Name or email" filters={userFilters}>
+          <DataTablePageSizeControl pagination={pageSizePagination} />
+        </DataTableToolbar>
 
-      <Suspense key={usersTableKey(query)} fallback={<UsersTableLoading roleOptions={rolesData} />}>
-        <UsersTable query={query} roleOptions={rolesData} />
-      </Suspense>
+        <Suspense key={usersTableKey(query)} fallback={<UsersTableLoading roleOptions={rolesData} />}>
+          <UsersTable query={query} roleOptions={rolesData} />
+        </Suspense>
+      </div>
     </section>
     </>
   );
@@ -197,6 +215,7 @@ async function UsersTable({ query, roleOptions }: { query: UserListQuery; roleOp
       getItemKey={(user) => user.id}
       emptyTitle="No users found"
       emptyDescription="Adjust the search or membership filter to see more members."
+      showPageSizeControl={false}
       pagination={{
         page: users.page,
         pageSize: users.pageSize,
@@ -306,4 +325,5 @@ function UserRoles({ user }: { user: UserListItem }) {
     </div>
   );
 }
+
 

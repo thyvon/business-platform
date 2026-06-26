@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, LoaderCircle, TriangleAlert } from "lucide-react";
+import { CheckCircle2, LoaderCircle, TriangleAlert } from "@/components/ui/icons";
 import { apiRequest } from "@/lib/api-client";
 
 type Health = { status: string; database: string; timestamp: string };
@@ -22,7 +22,7 @@ export function SystemStatus() {
     return <StatusCard icon={<TriangleAlert />} title="API unavailable" detail="Start the Express API on port 4000." tone="warning" />;
   }
   if (!health) {
-    return <StatusCard icon={<LoaderCircle className="animate-spin" />} title="Checking services" detail="Contacting the application API…" tone="neutral" />;
+    return <StatusCard icon={<LoaderCircle className="animate-spin" />} title="Checking services" detail="Contacting the application APIâ€¦" tone="neutral" />;
   }
   return <StatusCard icon={<CheckCircle2 />} title="Platform healthy" detail={`MySQL ${health.database}`} tone="success" />;
 }
@@ -40,3 +40,4 @@ function StatusCard({ icon, title, detail, tone }: { icon: React.ReactNode; titl
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Metadata } from "next";
 import type { Route } from "next";
-import { FileSearch } from "lucide-react";
+import { FileSearch } from "@/components/ui/icons";
 import { buttonVariants } from "@/components/ui/button";
 import { Footer } from "@/components/layout/footer";
 
@@ -32,3 +32,4 @@ export default function NotFoundPage() {
     </div>
   );
 }
+

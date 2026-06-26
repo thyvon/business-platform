@@ -1,7 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Metadata } from "next";
 import type { Route } from "next";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "@/components/ui/icons";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Access denied" };
